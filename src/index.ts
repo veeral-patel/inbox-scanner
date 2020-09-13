@@ -2,7 +2,7 @@ export * from './lib/async';
 export * from './lib/number';
 
 import fs from 'fs';
-import { google } from 'googleapis';
+import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 
 // If modifying these scopes, delete token.json.
@@ -122,6 +122,8 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
       string | undefined
     ] = await getMessageIds(auth, nextPageToken);
 
+    // TODO: Handle case if our API request fails
+
     // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
 
@@ -132,6 +134,29 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
   return allMessageIds;
 }
 
-async function main(auth: any) {
-  getAllMessageIds(auth).then((allMessageIds) => console.log(allMessageIds));
+async function getMessage(
+  auth: any,
+  messageId: string
+): Promise<gmail_v1.Schema$Message> {
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  const response = await gmail.users.messages.get({
+    userId: 'me',
+    id: messageId,
+  });
+
+  // TODO: Handle case if our API request fails
+
+  return response.data;
+}
+
+// Get all the inbox's email message IDs, then print the subject line for each one
+function main(auth: any) {
+  getAllMessageIds(auth).then((allMessageIds) => {
+    allMessageIds.forEach((messageId) => {
+      getMessage(auth, messageId).then((message) =>
+        console.log(message.snippet)
+      );
+    });
+  });
 }
