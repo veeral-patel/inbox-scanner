@@ -81,16 +81,20 @@ async function getMessageIds(
 ): Promise<[string[], string | undefined]> {
   const gmail = google.gmail({ version: 'v1', auth });
 
+  // Call Gmail's API
   const response = await gmail.users.messages.list({
     userId: 'me',
     pageToken,
   });
 
+  // Extract the message ID from each message object we receive and store our
+  // message IDs into an array
   let messageIds: string[] = [];
   response.data.messages?.forEach((message) => {
     if (message.id) messageIds.push(message.id);
   });
 
+  // Also extract our next page token from our API response
   let nextPageToken = response.data.nextPageToken
     ? response.data.nextPageToken
     : undefined;
@@ -109,12 +113,16 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
 
   let allMessageIds: string[] = [];
 
+  // Stop requesting the next set of message IDs from Gmail's API once we get an
+  // empty next page token from the API
   while (nextPageToken || firstExecution) {
+    // Request the next set of message IDs and next page token
     const [messageIds, newNextPageToken]: [
       string[],
       string | undefined
     ] = await getMessageIds(auth, nextPageToken);
 
+    // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
 
     nextPageToken = newNextPageToken;
