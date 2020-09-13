@@ -3,5 +3,22 @@
   "cSpell.enabled": true,
   "editor.formatOnSave": true,
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#cb8472",
+    "activityBar.activeBorder": "#b9e5c2",
+    "activityBar.background": "#cb8472",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#b9e5c2",
+    "activityBarBadge.foreground": "#15202b",
+    "statusBar.background": "#bd634d",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#cb8472",
+    "titleBar.activeBackground": "#bd634d",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#bd634d99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#bd634d"
 }
