@@ -152,11 +152,14 @@ async function getMessage(
 
 // Get all the inbox's email message IDs, then print the subject line for each one
 function main(auth: any) {
-  getAllMessageIds(auth).then((allMessageIds) => {
-    allMessageIds.forEach((messageId) => {
-      getMessage(auth, messageId).then((message) =>
-        console.log(message.snippet)
-      );
-    });
-  });
+  // TODO: handle errors properly here (not just with console.log)
+  getAllMessageIds(auth)
+    .then((allMessageIds) => {
+      allMessageIds.forEach((messageId) => {
+        getMessage(auth, messageId)
+          .then((message) => console.log(message.snippet))
+          .catch((err) => console.log(err));
+      });
+    })
+    .catch((err) => console.log(err));
 }
