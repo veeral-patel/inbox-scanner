@@ -150,6 +150,33 @@ async function getMessage(
   return response.data;
 }
 
+// Decodes a base64 encoded string
+function base64Decode(input: string): string {
+  let buff = new Buffer(input, 'base64');
+  return buff.toString('ascii');
+}
+
+function getText(payload: gmail_v1.Schema$MessagePart): string {
+  if (!payload?.parts) {
+    if (payload?.body?.data) {
+      return base64Decode(payload.body.data);
+    } else return '';
+  }
+
+  let text: string = '';
+  if (payload.body?.data) {
+    text += base64Decode(payload.body?.data);
+  }
+  payload.parts.forEach((part) => {
+    if (part.mimeType === 'text/plain' || part.mimeType == 'text/html') {
+      if (text && part.body?.data) text += base64Decode(part.body?.data);
+    } else {
+      text += getText(part);
+    }
+  });
+  return text;
+}
+
 // Get all the inbox's email message IDs, then print the subject line for each one
 function main(auth: any) {
   // TODO: handle errors properly here (not just with console.log)
