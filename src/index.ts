@@ -76,7 +76,7 @@ function getNewToken(oAuth2Client: any, callback: any) {
 async function getMessageIds(
   auth: any,
   pageToken: string | undefined
-): Promise<[string[], string | null | undefined]> {
+): Promise<[string[], string | undefined]> {
   const gmail = google.gmail({ version: 'v1', auth });
 
   const response = await gmail.users.messages.list({
@@ -89,7 +89,11 @@ async function getMessageIds(
     if (message.id) messageIds.push(message.id);
   });
 
-  return [messageIds, response.data.nextPageToken];
+  let nextPageToken = response.data.nextPageToken
+    ? response.data.nextPageToken
+    : undefined;
+
+  return [messageIds, nextPageToken];
 }
 
 async function getAllMessageIds(auth: any): Promise<string[]> {
