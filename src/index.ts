@@ -73,6 +73,8 @@ function getNewToken(oAuth2Client: any, callback: any) {
   });
 }
 
+// Returns a promise that resolves to (1) the message IDs from the page with the associated page token
+// and (2) the page token to use when retrieving our next set of message IDs.
 async function getMessageIds(
   auth: any,
   pageToken: string | undefined
@@ -96,6 +98,11 @@ async function getMessageIds(
   return [messageIds, nextPageToken];
 }
 
+// Returns a promise that resolves to a list of all the email message IDs
+// in the authenticated user's inbox.
+
+// (Gmail forces us to make separate calls to retrieve the emails associated with each
+// message ID.)
 async function getAllMessageIds(auth: any): Promise<string[]> {
   let nextPageToken: string | undefined = undefined;
   let firstExecution = true;
