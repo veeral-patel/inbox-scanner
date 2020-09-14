@@ -85,6 +85,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
+    q: 'docs.google.com',
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -179,54 +180,58 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
   return text;
 }
 
+function getFileUrls(urls: string[]): string[] {
+  // Get the URLs that look like they're of cloud based file links
+  let fileUrls = urls.filter((url) => {
+    return (
+      url.includes('drive.google.com') ||
+      url.includes('docs.google.com') ||
+      url.includes('sheets.google.com') ||
+      url.includes('forms.google.com') ||
+      url.includes('slides.google.com') ||
+      url.includes('dropbox.com/s')
+    );
+  });
+
+  let uniqueFileUrls: string[] = [];
+
+  // Re-assemble URLs to eliminate query parameters
+  fileUrls.forEach((fileUrl) => {
+    const result = url.parse(fileUrl);
+    const newUrl = `${result.protocol}//${result.host}${result.pathname}`;
+    uniqueFileUrls.push(newUrl);
+  });
+
+  // Only leave unique URLs in our list
+  uniqueFileUrls = Array.from(new Set(uniqueFileUrls));
+
+  return uniqueFileUrls;
+}
+
 // Get all the inbox's email message IDs, then print the subject line for each one
-function main(auth: any) {
-  // TODO: handle errors properly here (not just with console.log)
+async function main(auth: any) {
   let allUrls: string[] = [];
 
-  // let numberOfProcessedEmails = 0;
+  const allMessageIds = await getAllMessageIds(auth);
 
-  getAllMessageIds(auth)
-    .then((allMessageIds) => {
-      allMessageIds.forEach((messageId) => {
-        getMessage(auth, messageId)
-          .then((message) => {
-            if (message.payload) {
-              // get the text from our email message
-              const text = getText(message.payload);
+  allMessageIds.map(async (messageId) => {
+    getMessage(auth, messageId)
+      .then((message) => {
+        if (message.payload) {
+          // get the text from our email message
+          const text = getText(message.payload);
 
-              // extract URLs from our text
-              const newUrls: string[] = Array.from(getUrls(text));
+          // extract URLs from our text
+          const newUrls: string[] = Array.from(getUrls(text));
 
-              // add our URLs to our in memory list
-              allUrls = allUrls.concat(newUrls);
+          // add our URLs to our in memory list
+          allUrls = allUrls.concat(newUrls);
 
-              let filteredUrls = allUrls.filter((url) => {
-                return (
-                  url.includes('drive.google.com') ||
-                  url.includes('docs.google.com') ||
-                  url.includes('sheets.google.com') ||
-                  url.includes('forms.google.com') ||
-                  url.includes('slides.google.com') ||
-                  url.includes('dropbox.com/s')
-                );
-              });
-
-              let filteredUrlsUnique: string[] = [];
-              filteredUrls.forEach((ourUrl) => {
-                const result = url.parse(ourUrl);
-                const newUrl = `${result.protocol}//${result.host}${result.pathname}`;
-                filteredUrlsUnique.push(newUrl);
-              });
-
-              filteredUrlsUnique = Array.from(new Set(filteredUrlsUnique));
-
-              console.log(`${filteredUrlsUnique.length} filtered urls:`);
-              console.log(filteredUrlsUnique);
-            }
-          })
-          .catch((err) => console.log(err));
-      });
-    })
-    .catch((err) => console.log(err));
+          console.log(getFileUrls(allUrls));
+        }
+      })
+      .catch((err) => console.log(err));
+  });
 }
+
+// later: handle errors properly (not with console.log)
