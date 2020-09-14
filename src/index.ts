@@ -83,6 +83,8 @@ async function getMessageIds(
   const response = await gmail.users.messages.list({
     userId: 'me',
     pageToken,
+    includeSpamTrash: true,
+    // q: 'google', // TODO: comment me out
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -180,9 +182,11 @@ function main(auth: any) {
   // TODO: handle errors properly here (not just with console.log)
   let allUrls: string[] = [];
 
+  let numberOfProcessedEmails = 0;
+
   getAllMessageIds(auth)
     .then((allMessageIds) => {
-      allMessageIds.forEach((messageId, index) => {
+      allMessageIds.forEach((messageId) => {
         getMessage(auth, messageId)
           .then((message) => {
             if (message.payload) {
@@ -195,9 +199,20 @@ function main(auth: any) {
               // add our URLs to our in memory list
               allUrls = allUrls.concat(newUrls);
 
+              let filteredUrls = newUrls.filter((url) => {
+                url.includes('drive.google.com') ||
+                  url.includes('docs.google.com') ||
+                  url.includes('sheets.google.com') ||
+                  url.includes('forms.google.com') ||
+                  url.includes('slides.google.com') ||
+                  url.includes('dropbox.com/s');
+              });
+
               console.log(
-                `scanned email #${index}, got ${newUrls.length} new URLs, ${allUrls.length} in total: ${newUrls}`
+                `scanned email #${numberOfProcessedEmails}, got ${newUrls.length} new URLs from it, got ${filteredUrls.length} filtered URLs`
               );
+
+              numberOfProcessedEmails++;
             }
           })
           .catch((err) => console.log(err));
