@@ -2,6 +2,7 @@ import fs from 'fs';
 import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
+import url from 'url';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -84,7 +85,6 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    // q: 'google', // TODO: comment me out
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -169,7 +169,9 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
   }
   payload.parts.forEach((part) => {
     if (part.mimeType === 'text/plain' || part.mimeType == 'text/html') {
-      if (text && part.body?.data) text += base64Decode(part.body?.data);
+      if (part.body?.data) {
+        text += base64Decode(part.body?.data);
+      }
     } else {
       text += getText(part);
     }
@@ -182,7 +184,7 @@ function main(auth: any) {
   // TODO: handle errors properly here (not just with console.log)
   let allUrls: string[] = [];
 
-  let numberOfProcessedEmails = 0;
+  // let numberOfProcessedEmails = 0;
 
   getAllMessageIds(auth)
     .then((allMessageIds) => {
@@ -193,26 +195,42 @@ function main(auth: any) {
               // get the text from our email message
               const text = getText(message.payload);
 
+              // console.log('Message ID ' + message.id);
+              // console.log('Message date: ' + message.internalDate);
+              // console.log('Snippet: ' + message.snippet);
+              // console.log('Text:');
+              // console.log('--- START OF TEXT ---');
+              // console.log(text);
+              // console.log('--- END OF TEXT ---');
+
               // extract URLs from our text
-              const newUrls = Array.from(getUrls(text));
+              const newUrls: string[] = Array.from(getUrls(text));
 
               // add our URLs to our in memory list
               allUrls = allUrls.concat(newUrls);
 
-              let filteredUrls = newUrls.filter((url) => {
-                url.includes('drive.google.com') ||
+              let filteredUrls = allUrls.filter((url) => {
+                return (
+                  url.includes('drive.google.com') ||
                   url.includes('docs.google.com') ||
                   url.includes('sheets.google.com') ||
                   url.includes('forms.google.com') ||
                   url.includes('slides.google.com') ||
-                  url.includes('dropbox.com/s');
+                  url.includes('dropbox.com/s')
+                );
               });
 
-              console.log(
-                `scanned email #${numberOfProcessedEmails}, got ${newUrls.length} new URLs from it, got ${filteredUrls.length} filtered URLs`
-              );
+              let filteredUrlsUnique: string[] = [];
+              filteredUrls.forEach((ourUrl) => {
+                const result = url.parse(ourUrl);
+                const newUrl = `${result.protocol}${result.host}${result.pathname}`;
+                filteredUrlsUnique.push(newUrl);
+              });
 
-              numberOfProcessedEmails++;
+              filteredUrlsUnique = Array.from(new Set(filteredUrlsUnique));
+
+              console.log(`${filteredUrlsUnique.length} filtered urls:`);
+              console.log(filteredUrlsUnique);
             }
           })
           .catch((err) => console.log(err));
