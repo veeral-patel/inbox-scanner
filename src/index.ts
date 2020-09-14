@@ -86,6 +86,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
+    q: 'docs.google.com',
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -241,7 +242,8 @@ async function main(auth: any) {
           // add our URLs to our in memory list
           allUrls = allUrls.concat(newUrls);
 
-          getPublicUrls(getFileUrls(allUrls));
+          const fileUrls = getFileUrls(allUrls);
+          const _publicFileUrls = getPublicUrls(fileUrls);
         }
       })
       .catch((err) => console.log(err));
