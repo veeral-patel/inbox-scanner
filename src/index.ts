@@ -86,7 +86,6 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    q: 'docs.google.com', // todo: remove me
   });
 
   // Extract the message ID from each message object we receive and store our
