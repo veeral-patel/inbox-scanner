@@ -1,7 +1,5 @@
-export * from './lib/async';
-export * from './lib/number';
-
 import fs from 'fs';
+import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 
@@ -180,11 +178,28 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
 // Get all the inbox's email message IDs, then print the subject line for each one
 function main(auth: any) {
   // TODO: handle errors properly here (not just with console.log)
+  let allUrls: string[] = [];
+
   getAllMessageIds(auth)
     .then((allMessageIds) => {
-      allMessageIds.forEach((messageId) => {
+      allMessageIds.forEach((messageId, index) => {
         getMessage(auth, messageId)
-          .then((message) => console.log(message.snippet))
+          .then((message) => {
+            if (message.payload) {
+              // get the text from our email message
+              const text = getText(message.payload);
+
+              // extract URLs from our text
+              const newUrls = Array.from(getUrls(text));
+
+              // add our URLs to our in memory list
+              allUrls = allUrls.concat(newUrls);
+
+              console.log(
+                `scanned email #${index}, got ${newUrls.length} new URLs, ${allUrls.length} in total: ${newUrls}`
+              );
+            }
+          })
           .catch((err) => console.log(err));
       });
     })
