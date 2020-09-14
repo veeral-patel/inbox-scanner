@@ -2,6 +2,7 @@ import fs from 'fs';
 import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
+import request from 'request';
 import url from 'url';
 
 // If modifying these scopes, delete token.json.
@@ -85,7 +86,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    q: 'docs.google.com',
+    q: 'docs.google.com', // todo: remove me
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -208,6 +209,20 @@ function getFileUrls(urls: string[]): string[] {
   return uniqueFileUrls;
 }
 
+function getPublicUrls(urls: string[]) {
+  urls.forEach((url) => {
+    request.get(url, undefined, (err, res, _body) => {
+      if (err) {
+        // console.log('Not public: ' + url);
+      } else if (res.statusCode >= 200 && res.statusCode < 300) {
+        console.log('Public: ' + url);
+      } else {
+        // console.log('Not public: ' + url);
+      }
+    });
+  });
+}
+
 // Get all the inbox's email message IDs, then print the subject line for each one
 async function main(auth: any) {
   let allUrls: string[] = [];
@@ -227,7 +242,7 @@ async function main(auth: any) {
           // add our URLs to our in memory list
           allUrls = allUrls.concat(newUrls);
 
-          console.log(getFileUrls(allUrls));
+          getPublicUrls(getFileUrls(allUrls));
         }
       })
       .catch((err) => console.log(err));
