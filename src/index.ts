@@ -195,14 +195,6 @@ function main(auth: any) {
               // get the text from our email message
               const text = getText(message.payload);
 
-              // console.log('Message ID ' + message.id);
-              // console.log('Message date: ' + message.internalDate);
-              // console.log('Snippet: ' + message.snippet);
-              // console.log('Text:');
-              // console.log('--- START OF TEXT ---');
-              // console.log(text);
-              // console.log('--- END OF TEXT ---');
-
               // extract URLs from our text
               const newUrls: string[] = Array.from(getUrls(text));
 
@@ -223,7 +215,7 @@ function main(auth: any) {
               let filteredUrlsUnique: string[] = [];
               filteredUrls.forEach((ourUrl) => {
                 const result = url.parse(ourUrl);
-                const newUrl = `${result.protocol}${result.host}${result.pathname}`;
+                const newUrl = `${result.protocol}//${result.host}${result.pathname}`;
                 filteredUrlsUnique.push(newUrl);
               });
 
