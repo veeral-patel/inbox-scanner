@@ -136,6 +136,7 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
   return allMessageIds;
 }
 
+// Fetches a message from our API given a message ID
 async function getMessage(
   auth: any,
   messageId: string
@@ -158,8 +159,11 @@ function base64Decode(input: string): string {
   return buff.toString('ascii');
 }
 
+// Recursively traverses an email's payload (which is a tree of MIME parts) and returns
+// combined text from the plain, html parts
 function getText(payload: gmail_v1.Schema$MessagePart): string {
   if (!payload?.parts) {
+    // TODO: should we check that the payload's mime type is plain or html?
     if (payload?.body?.data) {
       return base64Decode(payload.body.data);
     } else return '';
@@ -181,8 +185,8 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
   return text;
 }
 
+// Gets the URLs that look like they're of cloud based file links
 function getFileUrls(urls: string[]): string[] {
-  // Get the URLs that look like they're of cloud based file links
   let fileUrls = urls.filter((theUrl) => {
     const parsed = url.parse(theUrl);
     const urlHost = parsed.host;
@@ -214,6 +218,7 @@ function getFileUrls(urls: string[]): string[] {
   return uniqueFileUrls;
 }
 
+// Gets all the public URLs from a list of URLs
 function getPublicUrls(urls: string[]): Promise<string[]> {
   return Promise.all(
     urls.map((url) =>
@@ -239,6 +244,7 @@ function getPublicUrls(urls: string[]): Promise<string[]> {
     .catch((_err) => []);
 }
 
+// Gets all the URLs from an email message, given its ID
 function getUrlsFromMessage(
   auth: any,
   messageId: string
@@ -260,6 +266,7 @@ function getUrlsFromMessage(
     .catch((_err) => []);
 }
 
+// Extracts all the URLs from an email inbox
 async function getAllUrls(auth: any): Promise<string[]> {
   const allMessageIds = await getAllMessageIds(auth);
   return Promise.all(
@@ -285,3 +292,5 @@ async function main(auth: any) {
 }
 
 // later: handle errors properly (not with console.log)
+// I should have error handling every time I call a promise, whether with .catch or with try/catch in the case
+// of async/await
