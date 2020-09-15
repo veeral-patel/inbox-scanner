@@ -239,32 +239,51 @@ function getPublicUrls(urls: string[]): Promise<string[]> {
     .catch((_err) => []);
 }
 
+function getUrlsFromMessage(
+  auth: any,
+  messageId: string
+): Promise<string[] | never[] | undefined> {
+  return getMessage(auth, messageId)
+    .then((message) => {
+      if (message.payload) {
+        // get the text from our email message
+        const text = getText(message.payload);
+
+        // extract URLs from our text
+        const newUrls: string[] = Array.from(getUrls(text));
+
+        return newUrls;
+      } else {
+        return [];
+      }
+    })
+    .catch((_err) => []);
+}
+
+async function getAllUrls(auth: any): Promise<string[]> {
+  const allMessageIds = await getAllMessageIds(auth);
+  return Promise.all(
+    allMessageIds.map(async (messageId) => {
+      return getUrlsFromMessage(auth, messageId);
+    })
+  )
+    .then((listOfLists) => {
+      let allUrls: string[] = [];
+      listOfLists.forEach((lst) => lst && (allUrls = allUrls.concat(lst)));
+      return allUrls;
+    })
+    .catch((_err) => []);
+}
+
 // Get all the inbox's email message IDs, then print the subject line for each one
 async function main(auth: any) {
-  let allUrls: string[] = [];
+  const allUrls = await getAllUrls(auth);
 
-  const allMessageIds = await getAllMessageIds(auth);
+  const fileUrls = getFileUrls(allUrls);
 
-  allMessageIds.map(async (messageId) => {
-    getMessage(auth, messageId)
-      .then((message) => {
-        if (message.payload) {
-          // get the text from our email message
-          const text = getText(message.payload);
+  const publicUrls = await getPublicUrls(fileUrls);
 
-          // extract URLs from our text
-          const newUrls: string[] = Array.from(getUrls(text));
-
-          // add our URLs to our in memory list
-          allUrls = allUrls.concat(newUrls);
-
-          const fileUrls = getFileUrls(allUrls);
-
-          getPublicUrls(fileUrls).then((publicUrls) => console.log(publicUrls));
-        }
-      })
-      .catch((err) => console.log(err));
-  });
+  console.log(publicUrls);
 }
 
 // later: handle errors properly (not with console.log)
