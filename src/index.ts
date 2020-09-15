@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import fs from 'fs';
 import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
@@ -215,26 +215,28 @@ function getFileUrls(urls: string[]): string[] {
 }
 
 function getPublicUrls(urls: string[]): Promise<string[]> {
-  let publicUrls: string[] = [];
-
   return Promise.all(
-    urls.map((url) => {
+    urls.map((url) =>
       axios
         .get(url)
         .then((response) => {
+          let publicUrls = [];
           if (response.status >= 200 && response.status < 300) {
             publicUrls.push(url);
           }
+          return publicUrls;
         })
-        .catch((_err: AxiosError) => {
-          // do nothing
-        });
-    })
+        .catch((_err) => [])
+    )
   )
-    .then(() => publicUrls)
-    .catch((_reason) => {
-      return [];
-    });
+    .then((listOfListsOfPublicUrls) => {
+      let entireList: string[] = [];
+      listOfListsOfPublicUrls.forEach(
+        (ourList) => (entireList = entireList.concat(ourList))
+      );
+      return entireList;
+    })
+    .catch((_err) => []);
 }
 
 // Get all the inbox's email message IDs, then print the subject line for each one
@@ -258,7 +260,7 @@ async function main(auth: any) {
 
           const fileUrls = getFileUrls(allUrls);
 
-          getPublicUrls(fileUrls);
+          getPublicUrls(fileUrls).then((publicUrls) => console.log(publicUrls));
         }
       })
       .catch((err) => console.log(err));
