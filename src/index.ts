@@ -232,7 +232,7 @@ function getPublicUrls(urls: string[]): Promise<string[]> {
     })
   )
     .then(() => publicUrls)
-    .catch((reason) => {
+    .catch((_reason) => {
       return [];
     });
 }
