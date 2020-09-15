@@ -245,25 +245,23 @@ function getPublicUrls(urls: string[]): Promise<string[]> {
 }
 
 // Gets all the URLs from an email message, given its ID
-function getUrlsFromMessage(
+async function getUrlsFromMessage(
   auth: any,
   messageId: string
 ): Promise<string[] | never[] | undefined> {
-  return getMessage(auth, messageId)
-    .then((message) => {
-      if (message.payload) {
-        // get the text from our email message
-        const text = getText(message.payload);
+  const message = await getMessage(auth, messageId);
 
-        // extract URLs from our text
-        const newUrls: string[] = Array.from(getUrls(text));
+  if (message.payload) {
+    // get the text from our email message
+    const text = getText(message.payload);
 
-        return newUrls;
-      } else {
-        return [];
-      }
-    })
-    .catch((_err) => []);
+    // extract URLs from our text
+    const newUrls: string[] = Array.from(getUrls(text));
+
+    return newUrls;
+  } else {
+    return [];
+  }
 }
 
 // Extracts all the URLs from an email inbox
