@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@bitauth/libauth": "^1.17.1",
+    "axios": "^0.19.0",
     "get-urls": "^10.0.0",
     "googleapis": "^59.0.0"
   },

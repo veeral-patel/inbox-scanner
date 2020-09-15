@@ -1,8 +1,8 @@
+import axios, { AxiosError } from 'axios';
 import fs from 'fs';
 import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
-import request from 'request';
 import url from 'url';
 
 // If modifying these scopes, delete token.json.
@@ -183,15 +183,20 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
 
 function getFileUrls(urls: string[]): string[] {
   // Get the URLs that look like they're of cloud based file links
-  let fileUrls = urls.filter((url) => {
-    return (
-      url.includes('drive.google.com') ||
-      url.includes('docs.google.com') ||
-      url.includes('sheets.google.com') ||
-      url.includes('forms.google.com') ||
-      url.includes('slides.google.com') ||
-      url.includes('dropbox.com/s')
-    );
+  let fileUrls = urls.filter((theUrl) => {
+    const parsed = url.parse(theUrl);
+    const urlHost = parsed.host;
+
+    const ALLOWED_HOSTS: string[] = [
+      'drive.google.com',
+      'docs.google.com',
+      'sheets.google.com',
+      'forms.google.com',
+      'slides.google.com',
+    ];
+
+    if (!urlHost) return false;
+    else return ALLOWED_HOSTS.includes(urlHost);
   });
 
   let uniqueFileUrls: string[] = [];
@@ -209,18 +214,27 @@ function getFileUrls(urls: string[]): string[] {
   return uniqueFileUrls;
 }
 
-function getPublicUrls(urls: string[]) {
-  urls.forEach((url) => {
-    request.get(url, undefined, (err, res, _body) => {
-      if (err) {
-        // console.log('Not public: ' + url);
-      } else if (res.statusCode >= 200 && res.statusCode < 300) {
-        console.log('Public: ' + url);
-      } else {
-        // console.log('Not public: ' + url);
-      }
+function getPublicUrls(urls: string[]): Promise<string[]> {
+  let publicUrls: string[] = [];
+
+  return Promise.all(
+    urls.map((url) => {
+      axios
+        .get(url)
+        .then((response) => {
+          if (response.status >= 200 && response.status < 300) {
+            publicUrls.push(url);
+          }
+        })
+        .catch((_err: AxiosError) => {
+          // do nothing
+        });
+    })
+  )
+    .then(() => publicUrls)
+    .catch((reason) => {
+      return [];
     });
-  });
 }
 
 // Get all the inbox's email message IDs, then print the subject line for each one
@@ -243,7 +257,8 @@ async function main(auth: any) {
           allUrls = allUrls.concat(newUrls);
 
           const fileUrls = getFileUrls(allUrls);
-          const _publicFileUrls = getPublicUrls(fileUrls);
+
+          getPublicUrls(fileUrls);
         }
       })
       .catch((err) => console.log(err));
