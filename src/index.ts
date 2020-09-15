@@ -263,9 +263,7 @@ function getUrlsFromMessage(
 async function getAllUrls(auth: any): Promise<string[]> {
   const allMessageIds = await getAllMessageIds(auth);
   return Promise.all(
-    allMessageIds.map(async (messageId) => {
-      return getUrlsFromMessage(auth, messageId);
-    })
+    allMessageIds.map((messageId) => getUrlsFromMessage(auth, messageId))
   )
     .then((listOfLists) => {
       let allUrls: string[] = [];
