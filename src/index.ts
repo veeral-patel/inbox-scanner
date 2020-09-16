@@ -151,7 +151,9 @@ async function getMessage(
       userId: 'me',
       id: messageId,
     })
-    .then((response) => response.data)
+    .then((response) => {
+      return response.data;
+    })
     .catch((err) => {
       console.log(`Failed to get message with ID ${messageId}: ${err}`);
       return null;
@@ -185,7 +187,16 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
       if (part.body?.data) {
         text += base64Decode(part.body?.data);
       }
+    } else if (part.filename) {
+      // if this part represents an attachment, get the text from the attachment too!
+      if (part.body?.attachmentId) {
+        // to do: fetch the attachment in a separate call and then get text
+      } else if (part.body?.data) {
+        // to do: base64 decode the attachment data from the part and then get text
+      }
     } else {
+      // it's either a container part so we get the text from its subparts
+      // or its a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
       text += getText(part);
     }
   });
