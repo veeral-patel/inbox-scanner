@@ -48,7 +48,8 @@
     "axios": "^0.19.0",
     "bluebird": "^3.7.2",
     "get-urls": "^10.0.0",
-    "googleapis": "^59.0.0"
+    "googleapis": "^59.0.0",
+    "pdfjs": "^2.4.1"
   },
   "devDependencies": {
     "@ava/typescript": "^1.1.1",

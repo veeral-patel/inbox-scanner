@@ -87,7 +87,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    // q: 'google',
+    q: 'docs.google.com',
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -194,11 +194,13 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
 
 // Gets the URLs that look like they're of cloud based file links
 function getFileUrls(urls: string[]): string[] {
-  let fileUrls = urls.filter(async (theUrl) => {
+  let fileUrls = urls.filter((theUrl) => {
     const parsed = url.parse(theUrl);
     const urlHost = parsed.host;
 
-    const FILE_HOSTNAMES: string[] = [
+    if (!urlHost) return false;
+
+    const GOOGLE_DRIVE_HOSTNAMES: string[] = [
       'drive.google.com',
       'docs.google.com',
       'sheets.google.com',
@@ -206,8 +208,10 @@ function getFileUrls(urls: string[]): string[] {
       'slides.google.com',
     ];
 
-    if (!urlHost) return false;
-    else return FILE_HOSTNAMES.includes(urlHost);
+    const isGoogleDriveFile = GOOGLE_DRIVE_HOSTNAMES.includes(urlHost);
+    const isDropboxFile = theUrl.includes('dropbox.com/s/');
+
+    return isGoogleDriveFile || isDropboxFile;
   });
 
   return fileUrls;
