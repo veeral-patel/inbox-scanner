@@ -87,7 +87,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    // q: 'dropbox',
+    q: 'connery123', // to do: comment this out
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -183,21 +183,28 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
     text += base64Decode(payload.body?.data);
   }
   payload.parts.forEach((part) => {
-    if (part.mimeType === 'text/plain' || part.mimeType == 'text/html') {
-      if (part.body?.data) {
-        text += base64Decode(part.body?.data);
-      }
-    } else if (part.filename) {
+    if (part.filename) {
       // if this part represents an attachment, get the text from the attachment too!
       if (part.body?.attachmentId) {
         // to do: fetch the attachment in a separate call and then get text
       } else if (part.body?.data) {
         // to do: base64 decode the attachment data from the part and then get text
+        if (part.mimeType === 'text/plain') {
+          if (part.body?.data) {
+            text += base64Decode(part.body?.data);
+          }
+        }
       }
     } else {
-      // it's either a container part so we get the text from its subparts
-      // or its a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
-      text += getText(part);
+      if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
+        if (part.body?.data) {
+          text += base64Decode(part.body?.data);
+        }
+      } else {
+        // it's either a container part so we get the text from its subparts
+        // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
+        text += getText(part);
+      }
     }
   });
   return text;
