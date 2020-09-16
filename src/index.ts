@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Promise as Bluebird } from 'bluebird';
 import fs from 'fs';
 import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
@@ -86,7 +87,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    q: 'docs.google.com',
+    // q: 'google',
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -129,6 +130,8 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
     // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
 
+    console.log(`Got ${allMessageIds.length} message IDs so far`);
+
     nextPageToken = newNextPageToken;
     firstExecution = false;
   }
@@ -140,17 +143,21 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
 async function getMessage(
   auth: any,
   messageId: string
-): Promise<gmail_v1.Schema$Message> {
+): Promise<gmail_v1.Schema$Message | null> {
   const gmail = google.gmail({ version: 'v1', auth });
 
-  const response = await gmail.users.messages.get({
-    userId: 'me',
-    id: messageId,
-  });
+  return gmail.users.messages
+    .get({
+      userId: 'me',
+      id: messageId,
+    })
+    .then((response) => response.data)
+    .catch((err) => {
+      console.log(`Failed to get message with ID ${messageId}: ${err}`);
+      return null;
+    });
 
   // TODO: Handle case if our API request fails
-
-  return response.data;
 }
 
 // Decodes a base64 encoded string
@@ -187,11 +194,11 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
 
 // Gets the URLs that look like they're of cloud based file links
 function getFileUrls(urls: string[]): string[] {
-  let fileUrls = urls.filter((theUrl) => {
+  let fileUrls = urls.filter(async (theUrl) => {
     const parsed = url.parse(theUrl);
     const urlHost = parsed.host;
 
-    const ALLOWED_HOSTS: string[] = [
+    const FILE_HOSTNAMES: string[] = [
       'drive.google.com',
       'docs.google.com',
       'sheets.google.com',
@@ -200,7 +207,7 @@ function getFileUrls(urls: string[]): string[] {
     ];
 
     if (!urlHost) return false;
-    else return ALLOWED_HOSTS.includes(urlHost);
+    else return FILE_HOSTNAMES.includes(urlHost);
   });
 
   return fileUrls;
@@ -225,18 +232,25 @@ function getUniqueUrls(urls: string[]) {
 // Gets all the public URLs from a list of URLs
 function getPublicUrls(urls: string[]): Promise<string[]> {
   return Promise.all(
-    urls.map((url) =>
-      axios
+    urls.map((url) => {
+      console.log(`Checking if url ${url} is public`);
+      return axios
         .get(url)
         .then((response) => {
           let publicUrls = [];
           if (response.status >= 200 && response.status < 300) {
+            console.log(`Found public URL: ${url}`);
             publicUrls.push(url);
           }
           return publicUrls;
         })
-        .catch((_err) => [])
-    )
+        .catch((err) => {
+          console.log(
+            `Error occurred when fetching URL ${url} to check if it's public: ${err}`
+          );
+          return [];
+        });
+    })
   )
     .then((listOfListsOfPublicUrls) => {
       let entireList: string[] = [];
@@ -255,12 +269,14 @@ async function getUrlsFromMessage(
 ): Promise<string[] | never[] | undefined> {
   const message = await getMessage(auth, messageId);
 
-  if (message.payload) {
+  if (message && message.payload) {
     // get the text from our email message
     const text = getText(message.payload);
 
     // extract URLs from our text
     const newUrls: string[] = Array.from(getUrls(text));
+
+    console.log(`Got ${newUrls.length} URLs from message ${messageId}`);
 
     return newUrls;
   } else {
@@ -271,8 +287,10 @@ async function getUrlsFromMessage(
 // Extracts all the URLs from an email inbox
 async function getAllUrls(auth: any): Promise<string[]> {
   const allMessageIds = await getAllMessageIds(auth);
-  return Promise.all(
-    allMessageIds.map((messageId) => getUrlsFromMessage(auth, messageId))
+  return Bluebird.map(
+    allMessageIds,
+    (messageId) => getUrlsFromMessage(auth, messageId),
+    { concurrency: 40 }
   )
     .then((listOfLists) => {
       let allUrls: string[] = [];
@@ -286,12 +304,22 @@ async function getAllUrls(auth: any): Promise<string[]> {
 async function main(auth: any) {
   const allUrls = await getAllUrls(auth);
 
+  console.log('all URLs:');
+  console.log(allUrls);
+
   const fileUrls = getFileUrls(allUrls);
+
+  console.log('file URLs:');
+  console.log(fileUrls);
 
   const publicUrls = await getPublicUrls(fileUrls);
 
+  console.log('public URLs:');
+  console.log(publicUrls);
+
   const uniquePublicUrls = getUniqueUrls(publicUrls);
 
+  console.log('unique public URLs:');
   console.log(uniquePublicUrls);
 }
 
