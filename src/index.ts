@@ -87,7 +87,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    q: 'docs.google.com',
+    // q: 'dropbox',
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -242,7 +242,7 @@ function getPublicUrls(urls: string[]): Promise<string[]> {
         .get(url)
         .then((response) => {
           let publicUrls = [];
-          if (response.status >= 200 && response.status < 300) {
+          if (response.status >= 200 && response.status <= 301) {
             console.log(`Found public URL: ${url}`);
             publicUrls.push(url);
           }
