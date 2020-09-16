@@ -203,11 +203,15 @@ function getFileUrls(urls: string[]): string[] {
     else return ALLOWED_HOSTS.includes(urlHost);
   });
 
+  return fileUrls;
+}
+
+function getUniqueUrls(urls: string[]) {
   let uniqueFileUrls: string[] = [];
 
   // Re-assemble URLs to eliminate query parameters
-  fileUrls.forEach((fileUrl) => {
-    const result = url.parse(fileUrl);
+  urls.forEach((ourUrl) => {
+    const result = url.parse(ourUrl);
     const newUrl = `${result.protocol}//${result.host}${result.pathname}`;
     uniqueFileUrls.push(newUrl);
   });
@@ -286,7 +290,9 @@ async function main(auth: any) {
 
   const publicUrls = await getPublicUrls(fileUrls);
 
-  console.log(publicUrls);
+  const uniquePublicUrls = getUniqueUrls(publicUrls);
+
+  console.log(uniquePublicUrls);
 }
 
 // later: handle errors properly (not with console.log)
