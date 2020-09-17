@@ -128,8 +128,6 @@ async function getAllMessageIds(auth: OAuth2Client): Promise<string[]> {
       string | undefined
     ] = await getMessageIds(auth, nextPageToken);
 
-    // TODO: Handle case if our API request fails
-
     // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
 
@@ -197,7 +195,6 @@ async function getText(
       // if this part represents an attachment, get the text from the attachment too!
       if (part.body?.attachmentId) {
         if (part.mimeType === 'text/plain') {
-          // to do: fetch the attachment in a separate call and then get text
           const attachment = await getAttachment(
             auth,
             messageId,
@@ -209,7 +206,7 @@ async function getText(
           }
         }
       } else if (part.body?.data) {
-        // to do: base64 decode the attachment data from the part and then get text
+        // base64 decode the attachment data from the part and then get text
         if (part.mimeType === 'text/plain') {
           if (part.body?.data) {
             text += base64Decode(part.body?.data);
