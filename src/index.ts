@@ -174,55 +174,73 @@ function getText(
   auth: any,
   messageId: string,
   payload: gmail_v1.Schema$MessagePart
-): string {
+): Promise<string> {
   if (!payload?.parts) {
     // TODO: should we check that the payload's mime type is plain or html?
-    if (payload?.body?.data) {
-      return base64Decode(payload.body.data);
-    } else return '';
-  }
-
-  let text: string = '';
-  if (payload.body?.data) {
-    text += base64Decode(payload.body?.data);
-  }
-  payload.parts.forEach(async (part) => {
-    if (part.filename) {
-      // if this part represents an attachment, get the text from the attachment too!
-      if (part.body?.attachmentId) {
-        if (part.mimeType === 'text/plain') {
-          // to do: fetch the attachment in a separate call and then get text
-          const attachment = await getAttachment(
-            auth,
-            messageId,
-            part.body.attachmentId
-          );
-
-          if (attachment?.data) {
-            text += base64Decode(attachment?.data);
-          }
-        }
-      } else if (part.body?.data) {
-        // to do: base64 decode the attachment data from the part and then get text
-        if (part.mimeType === 'text/plain') {
-          if (part.body?.data) {
-            text += base64Decode(part.body?.data);
-          }
-        }
-      }
-    } else {
-      if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-        if (part.body?.data) {
-          text += base64Decode(part.body?.data);
-        }
+    return new Promise((resolve, _reject) => {
+      if (payload?.body?.data) {
+        resolve(base64Decode(payload.body.data));
       } else {
-        // it's either a container part so we get the text from its subparts
-        // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
-        text += getText(auth, messageId, part);
+        resolve('');
       }
-    }
-  });
-  return text;
+    });
+  }
+
+  var initialText: string = '';
+  if (payload.body?.data) {
+    initialText = base64Decode(payload.body?.data);
+  }
+
+  return (
+    Promise.all(
+      payload.parts.map(async (part) => {
+        let text: string = '';
+
+        if (part.filename) {
+          // if this part represents an attachment, get the text from the attachment too!
+          if (part.body?.attachmentId) {
+            if (part.mimeType === 'text/plain') {
+              // to do: fetch the attachment in a separate call and then get text
+              const attachment = await getAttachment(
+                auth,
+                messageId,
+                part.body.attachmentId
+              );
+
+              if (attachment?.data) {
+                text += base64Decode(attachment?.data);
+              }
+            }
+          } else if (part.body?.data) {
+            // to do: base64 decode the attachment data from the part and then get text
+            if (part.mimeType === 'text/plain') {
+              if (part.body?.data) {
+                text += base64Decode(part.body?.data);
+              }
+            }
+          }
+        } else {
+          if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
+            if (part.body?.data) {
+              text += base64Decode(part.body?.data);
+            }
+          } else {
+            // it's either a container part so we get the text from its subparts
+            // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
+
+            // also: wrap this await in a try/catch clause
+            text += await getText(auth, messageId, part);
+          }
+        }
+        return text;
+      })
+    )
+      .then((values) => {
+        return values.join('\n');
+      })
+      // to do: handle this error
+      .catch((_err) => '')
+  );
 }
 
 async function getAttachment(
@@ -327,7 +345,7 @@ async function getUrlsFromMessage(
 
   if (message && message.payload) {
     // get the text from our email message
-    const text = getText(auth, messageId, message.payload);
+    const text = await getText(auth, messageId, message.payload);
 
     // extract URLs from our text
     const newUrls: string[] = Array.from(getUrls(text));
