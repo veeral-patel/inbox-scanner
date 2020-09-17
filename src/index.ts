@@ -5,7 +5,7 @@ import getUrls from 'get-urls';
 import { OAuth2Client } from 'google-auth-library';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
-import url from 'url';
+import urlModule from 'url';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -190,7 +190,7 @@ async function getText(
     initialText = base64Decode(payload.body?.data);
   }
 
-  const piecesOfText = await Bluebird.map(payload.parts, async (part) => {
+  let piecesOfText = await Bluebird.map(payload.parts, async (part) => {
     let text: string = '';
 
     if (part.filename) {
@@ -282,7 +282,7 @@ function getUniqueUrls(urls: string[]) {
 
   // Re-assemble URLs to eliminate query parameters
   urls.forEach((ourUrl) => {
-    const result = url.parse(ourUrl);
+    const result = urlModule.parse(ourUrl);
     const newUrl = `${result.protocol}//${result.host}${result.pathname}`;
     uniqueFileUrls.push(newUrl);
   });
@@ -381,12 +381,12 @@ async function main(auth: OAuth2Client) {
 
 // also: convert my code to use async/await instead of promises
 
-// I also can have Gianluca or someone else comment on my code to make sure it's high quality
+// I also can have Gianluca or someone else code review my code to make sure it's high quality
 
 // I also want to remove "auth" as an argument from my methods
 
 // To do: I should not have url as both a variable name and as an imported module
 
-// I should move from Promise.all to Bluebird.map
+// I should move from Promise.all to Bluebird.map - DONE
 
 // to do: remove console.log statements from throughout my code
