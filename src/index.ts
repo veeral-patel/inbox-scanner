@@ -401,5 +401,12 @@ async function main(auth: OAuth2Client) {
 }
 
 // later: handle errors properly (not with console.log)
+
 // I should have error handling every time I call a promise, whether with .catch or with try/catch in the case
 // of async/await
+
+// also: convert my code to use async/await instead of promises
+
+// I also can have Gianluca or someone else comment on my code to make sure it's high quality
+
+// I also want to remove "auth" as an argument from my methods
