@@ -351,7 +351,6 @@ async function getAllUrls(auth: OAuth2Client): Promise<string[]> {
   return allUrls;
 }
 
-// Get all the inbox's email message IDs, then print the subject line for each one
 async function main(auth: OAuth2Client) {
   const allUrls = await getAllUrls(auth);
 
@@ -379,13 +378,13 @@ async function main(auth: OAuth2Client) {
 // I should have error handling every time I call a promise, whether with .catch or with try/catch in the case
 // of async/await
 
-// also: convert my code to use async/await instead of promises
+// also: convert my code to use async/await instead of promises - DONE
 
 // I also can have Gianluca or someone else code review my code to make sure it's high quality
 
 // I also want to remove "auth" as an argument from my methods
 
-// To do: I should not have url as both a variable name and as an imported module
+// To do: I should not have url as both a variable name and as an imported module - DONE
 
 // I should move from Promise.all to Bluebird.map - DONE
 
