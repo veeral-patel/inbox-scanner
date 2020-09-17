@@ -95,14 +95,12 @@ async function getMessageIds(
   // Extract the message ID from each message object we receive and store our
   // message IDs into an array
   let messageIds: string[] = [];
-  response.data.messages?.forEach((message) => {
-    if (message.id) messageIds.push(message.id);
-  });
+  response.data.messages?.forEach(
+    (message) => message.id && messageIds.push(message.id)
+  );
 
   // Also extract our next page token from our API response
-  let nextPageToken = response.data.nextPageToken
-    ? response.data.nextPageToken
-    : undefined;
+  let nextPageToken = response.data.nextPageToken || undefined;
 
   return [messageIds, nextPageToken];
 }
