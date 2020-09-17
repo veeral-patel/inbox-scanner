@@ -170,7 +170,11 @@ function base64Decode(input: string): string {
 
 // Recursively traverses an email's payload (which is a tree of MIME parts) and returns
 // combined text from the plain, html parts
-function getText(payload: gmail_v1.Schema$MessagePart): string {
+function getText(
+  auth: any,
+  messageId: string,
+  payload: gmail_v1.Schema$MessagePart
+): string {
   if (!payload?.parts) {
     // TODO: should we check that the payload's mime type is plain or html?
     if (payload?.body?.data) {
@@ -182,11 +186,22 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
   if (payload.body?.data) {
     text += base64Decode(payload.body?.data);
   }
-  payload.parts.forEach((part) => {
+  payload.parts.forEach(async (part) => {
     if (part.filename) {
       // if this part represents an attachment, get the text from the attachment too!
       if (part.body?.attachmentId) {
-        // to do: fetch the attachment in a separate call and then get text
+        if (part.mimeType === 'text/plain') {
+          // to do: fetch the attachment in a separate call and then get text
+          const attachment = await getAttachment(
+            auth,
+            messageId,
+            part.body.attachmentId
+          );
+
+          if (attachment?.data) {
+            text += base64Decode(attachment?.data);
+          }
+        }
       } else if (part.body?.data) {
         // to do: base64 decode the attachment data from the part and then get text
         if (part.mimeType === 'text/plain') {
@@ -203,11 +218,30 @@ function getText(payload: gmail_v1.Schema$MessagePart): string {
       } else {
         // it's either a container part so we get the text from its subparts
         // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
-        text += getText(part);
+        text += getText(auth, messageId, part);
       }
     }
   });
   return text;
+}
+
+async function getAttachment(
+  auth: any,
+  messageId: string,
+  attachmentId: string
+): Promise<gmail_v1.Schema$MessagePartBody | null> {
+  const gmail = google.gmail({ version: 'v1', auth });
+  return gmail.users.messages.attachments
+    .get({
+      userId: 'me',
+      messageId: messageId,
+      id: attachmentId,
+    })
+    .then((response) => response.data)
+    .catch((_err) => {
+      console.log(`Failed to get attachment with ID ${attachmentId}`);
+      return null;
+    });
 }
 
 // Gets the URLs that look like they're of cloud based file links
@@ -293,7 +327,7 @@ async function getUrlsFromMessage(
 
   if (message && message.payload) {
     // get the text from our email message
-    const text = getText(message.payload);
+    const text = getText(auth, messageId, message.payload);
 
     // extract URLs from our text
     const newUrls: string[] = Array.from(getUrls(text));
