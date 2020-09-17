@@ -230,6 +230,7 @@ function getText(
       })
     )
       .then((values) => {
+        values.push(initialText);
         return values.join('\n');
       })
       // to do: handle this error
@@ -343,17 +344,16 @@ async function getUrlsFromMessage(
 // Extracts all the URLs from an email inbox
 async function getAllUrls(auth: OAuth2Client): Promise<string[]> {
   const allMessageIds = await getAllMessageIds(auth);
-  return Bluebird.map(
+
+  const listOfLists = await Bluebird.map(
     allMessageIds,
     (messageId) => getUrlsFromMessage(auth, messageId),
     { concurrency: 40 }
-  )
-    .then((listOfLists) => {
-      let allUrls: string[] = [];
-      listOfLists.forEach((lst) => lst && (allUrls = allUrls.concat(lst)));
-      return allUrls;
-    })
-    .catch((_err) => []);
+  );
+
+  let allUrls: string[] = [];
+  listOfLists.forEach((lst) => lst && (allUrls = allUrls.concat(lst)));
+  return allUrls;
 }
 
 // Get all the inbox's email message IDs, then print the subject line for each one
