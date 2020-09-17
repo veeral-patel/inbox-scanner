@@ -28,7 +28,7 @@ fs.readFile('credentials.json', (err, content) => {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials: any, callback: any) {
+function authorize(credentials: any, callback: (auth: OAuth2Client) => void) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
 
   const oAuth2Client = new google.auth.OAuth2(
@@ -51,7 +51,10 @@ function authorize(credentials: any, callback: any) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
-function getNewToken(oAuth2Client: any, callback: any) {
+function getNewToken(
+  oAuth2Client: any,
+  callback: (auth: OAuth2Client) => void
+) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -168,10 +171,14 @@ async function getText(
   payload: gmail_v1.Schema$MessagePart
 ): Promise<string> {
   if (!payload?.parts) {
-    // TODO: should we check that the payload's mime type is plain or html?
     return new Promise((resolve, _reject) => {
       if (payload?.body?.data) {
-        resolve(base64Decode(payload.body.data));
+        if (
+          payload.mimeType === 'text/plain' ||
+          payload.mimeType === 'text/html'
+        ) {
+          resolve(base64Decode(payload.body.data));
+        }
       } else {
         resolve('');
       }
