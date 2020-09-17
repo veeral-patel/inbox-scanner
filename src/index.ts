@@ -275,10 +275,9 @@ function isDropboxFileLink(theUrl: string) {
 function getUniqueUrls(urls: string[]) {
   let uniqueFileUrls: string[] = [];
 
-  // Re-assemble URLs to eliminate query parameters
+  // Remove query params to identify duplicated URLs
   urls.forEach((ourUrl) => {
-    const result = urlModule.parse(ourUrl);
-    const newUrl = `${result.protocol}//${result.host}${result.pathname}`;
+    const newUrl = urlWithoutQueryParameters(ourUrl);
     uniqueFileUrls.push(newUrl);
   });
 
@@ -286,6 +285,12 @@ function getUniqueUrls(urls: string[]) {
   uniqueFileUrls = Array.from(new Set(uniqueFileUrls));
 
   return uniqueFileUrls;
+}
+
+// Removes the query parameters from a URL by parsing it and re-assembling it
+function urlWithoutQueryParameters(theUrl: string): string {
+  const parsedUrl = urlModule.parse(theUrl);
+  return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
 }
 
 // Gets all the public URLs from a list of URLs
@@ -375,12 +380,19 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // also: convert my code to use async/await instead of promises - DONE
 
-// I also can have Gianluca or someone else code review my code to make sure it's high quality
+// I also can have Gianluca or someone else code review my code to make sure it's high quality -  LATER
 
-// I also want to remove "auth" as an argument from my methods
+// I also want to remove "auth" as an argument from my methods - DONE
+
+// Maybe - remove gmail as an argument from my methods - BUT HOW?
 
 // To do: I should not have url as both a variable name and as an imported module - DONE
 
 // I should move from Promise.all to Bluebird.map - DONE
 
-// to do: remove console.log statements from throughout my code
+// to do: remove console.log statements from throughout my code - MAYBE
+
+// to do: make my functions easier to test. remove side effects, try to create as many pure functions as I can
+// that map some input to some output
+
+// to do: start writing tests for my easy to test functions
