@@ -164,7 +164,7 @@ function base64Decode(input: string): string {
 
 // Recursively traverses an email's payload (which is a tree of MIME parts) and returns
 // combined text from the plain, html parts
-function getText(
+async function getText(
   auth: OAuth2Client,
   messageId: string,
   payload: gmail_v1.Schema$MessagePart
@@ -185,57 +185,50 @@ function getText(
     initialText = base64Decode(payload.body?.data);
   }
 
-  return (
-    Promise.all(
-      payload.parts.map(async (part) => {
-        let text: string = '';
+  const piecesOfText = await Bluebird.map(payload.parts, async (part) => {
+    let text: string = '';
 
-        if (part.filename) {
-          // if this part represents an attachment, get the text from the attachment too!
-          if (part.body?.attachmentId) {
-            if (part.mimeType === 'text/plain') {
-              // to do: fetch the attachment in a separate call and then get text
-              const attachment = await getAttachment(
-                auth,
-                messageId,
-                part.body.attachmentId
-              );
+    if (part.filename) {
+      // if this part represents an attachment, get the text from the attachment too!
+      if (part.body?.attachmentId) {
+        if (part.mimeType === 'text/plain') {
+          // to do: fetch the attachment in a separate call and then get text
+          const attachment = await getAttachment(
+            auth,
+            messageId,
+            part.body.attachmentId
+          );
 
-              if (attachment?.data) {
-                text += base64Decode(attachment?.data);
-              }
-            }
-          } else if (part.body?.data) {
-            // to do: base64 decode the attachment data from the part and then get text
-            if (part.mimeType === 'text/plain') {
-              if (part.body?.data) {
-                text += base64Decode(part.body?.data);
-              }
-            }
-          }
-        } else {
-          if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-            if (part.body?.data) {
-              text += base64Decode(part.body?.data);
-            }
-          } else {
-            // it's either a container part so we get the text from its subparts
-            // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
-
-            // also: wrap this await in a try/catch clause
-            text += await getText(auth, messageId, part);
+          if (attachment?.data) {
+            text += base64Decode(attachment?.data);
           }
         }
-        return text;
-      })
-    )
-      .then((values) => {
-        values.push(initialText);
-        return values.join('\n');
-      })
-      // to do: handle this error
-      .catch((_err) => '')
-  );
+      } else if (part.body?.data) {
+        // to do: base64 decode the attachment data from the part and then get text
+        if (part.mimeType === 'text/plain') {
+          if (part.body?.data) {
+            text += base64Decode(part.body?.data);
+          }
+        }
+      }
+    } else {
+      if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
+        if (part.body?.data) {
+          text += base64Decode(part.body?.data);
+        }
+      } else {
+        // it's either a container part so we get the text from its subparts
+        // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
+
+        // also: wrap this await in a try/catch clause
+        text += await getText(auth, messageId, part);
+      }
+    }
+    return text;
+  });
+
+  piecesOfText.push(initialText);
+  return piecesOfText.join('\n');
 }
 
 async function getAttachment(
@@ -323,7 +316,7 @@ async function getUrlsFromMessage(
 ): Promise<string[] | never[] | undefined> {
   const message = await getMessage(auth, messageId);
 
-  if (message && message.payload) {
+  if (message?.payload) {
     // get the text from our email message
     const text = await getText(auth, messageId, message.payload);
 
@@ -333,9 +326,9 @@ async function getUrlsFromMessage(
     console.log(`Got ${newUrls.length} URLs from message ${messageId}`);
 
     return newUrls;
-  } else {
-    return [];
   }
+
+  return [];
 }
 
 // Extracts all the URLs from an email inbox
