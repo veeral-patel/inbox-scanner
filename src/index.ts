@@ -297,25 +297,23 @@ function getUniqueUrls(urls: string[]) {
 
 // Gets all the public URLs from a list of URLs
 async function getPublicUrls(urls: string[]): Promise<string[]> {
-  const listOfListsOfPublicUrls = await Bluebird.map(urls, async (url) => {
+  let publicUrls: (string | null)[] = await Bluebird.map(urls, async (url) => {
     console.log(`Checking if url ${url} is public`);
 
     const response = await axios.get(url);
 
-    let publicUrls = [];
     if (response.status >= 200 && response.status <= 301) {
       console.log(`Found public URL: ${url}`);
-      publicUrls.push(url);
+      return url;
     }
-    return publicUrls;
+
+    return null;
   });
 
-  let entireList: string[] = [];
-  listOfListsOfPublicUrls.forEach(
-    (ourList) => (entireList = entireList.concat(ourList))
-  );
+  let filteredPublicUrls: string[] = [];
+  publicUrls.forEach((url) => url && filteredPublicUrls.push(url));
 
-  return entireList;
+  return filteredPublicUrls;
 }
 
 // Gets all the URLs from an email message, given its ID
@@ -392,3 +390,5 @@ async function main(auth: OAuth2Client) {
 // To do: I should not have url as both a variable name and as an imported module
 
 // I should move from Promise.all to Bluebird.map
+
+// to do: remove console.log statements from throughout my code
