@@ -87,7 +87,7 @@ async function getMessageIds(
     userId: 'me',
     pageToken,
     includeSpamTrash: true,
-    q: 'connery123', // to do: comment this out
+    q: 'patrick6', // to do: comment this out
   });
 
   // Extract the message ID from each message object we receive and store our
@@ -279,7 +279,8 @@ function getFileUrls(urls: string[]): string[] {
     ];
 
     const isGoogleDriveFile = GOOGLE_DRIVE_HOSTNAMES.includes(urlHost);
-    const isDropboxFile = theUrl.includes('dropbox.com/s/');
+    const isDropboxFile =
+      theUrl.includes('dropbox.com/s/') || theUrl.includes('dropbox.com/scl/');
 
     return isGoogleDriveFile || isDropboxFile;
   });
