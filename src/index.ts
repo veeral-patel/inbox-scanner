@@ -2,7 +2,6 @@ import axios from 'axios';
 import { Promise as Bluebird } from 'bluebird';
 import fs from 'fs';
 import getUrls from 'get-urls';
-import { OAuth2Client } from 'google-auth-library';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 import urlModule from 'url';
@@ -28,7 +27,10 @@ fs.readFile('credentials.json', (err, content) => {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials: any, callback: (auth: OAuth2Client) => void) {
+function authorize(
+  credentials: any,
+  callback: (gmail: gmail_v1.Gmail) => void
+) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
 
   const oAuth2Client = new google.auth.OAuth2(
@@ -41,7 +43,9 @@ function authorize(credentials: any, callback: (auth: OAuth2Client) => void) {
   fs.readFile(TOKEN_PATH, (err, token) => {
     if (err) return getNewToken(oAuth2Client, callback);
     oAuth2Client.setCredentials(JSON.parse(token.toString()));
-    callback(oAuth2Client);
+
+    const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+    callback(gmail);
   });
 }
 
@@ -53,7 +57,7 @@ function authorize(credentials: any, callback: (auth: OAuth2Client) => void) {
  */
 function getNewToken(
   oAuth2Client: any,
-  callback: (auth: OAuth2Client) => void
+  callback: (gmail: gmail_v1.Gmail) => void
 ) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -82,11 +86,9 @@ function getNewToken(
 // Returns a promise that resolves to (1) the message IDs from the page with the associated page token
 // and (2) the page token to use when retrieving our next set of message IDs.
 async function getMessageIds(
-  auth: OAuth2Client,
+  gmail: gmail_v1.Gmail,
   pageToken: string | undefined
 ): Promise<[string[], string | undefined]> {
-  const gmail = google.gmail({ version: 'v1', auth });
-
   // Call Gmail's API
   const response = await gmail.users.messages.list({
     userId: 'me',
@@ -113,7 +115,7 @@ async function getMessageIds(
 
 // (Gmail forces us to make separate calls to retrieve the emails associated with each
 // message ID.)
-async function getAllMessageIds(auth: OAuth2Client): Promise<string[]> {
+async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
   let nextPageToken: string | undefined = undefined;
   let firstExecution = true;
 
@@ -126,7 +128,7 @@ async function getAllMessageIds(auth: OAuth2Client): Promise<string[]> {
     const [messageIds, newNextPageToken]: [
       string[],
       string | undefined
-    ] = await getMessageIds(auth, nextPageToken);
+    ] = await getMessageIds(gmail, nextPageToken);
 
     // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
@@ -142,11 +144,9 @@ async function getAllMessageIds(auth: OAuth2Client): Promise<string[]> {
 
 // Fetches a message from our API given a message ID
 async function getMessage(
-  auth: OAuth2Client,
+  gmail: gmail_v1.Gmail,
   messageId: string
 ): Promise<gmail_v1.Schema$Message | null> {
-  const gmail = google.gmail({ version: 'v1', auth });
-
   const response = await gmail.users.messages.get({
     userId: 'me',
     id: messageId,
@@ -164,23 +164,21 @@ function base64Decode(input: string): string {
 // Recursively traverses an email's payload (which is a tree of MIME parts) and returns
 // combined text from the plain, html parts
 async function getText(
-  auth: OAuth2Client,
+  gmail: gmail_v1.Gmail,
   messageId: string,
   payload: gmail_v1.Schema$MessagePart
 ): Promise<string> {
   if (!payload?.parts) {
-    return new Promise((resolve, _reject) => {
-      if (payload?.body?.data) {
-        if (
-          payload.mimeType === 'text/plain' ||
-          payload.mimeType === 'text/html'
-        ) {
-          resolve(base64Decode(payload.body.data));
-        }
-      } else {
-        resolve('');
+    if (payload?.body?.data) {
+      if (
+        payload.mimeType === 'text/plain' ||
+        payload.mimeType === 'text/html'
+      ) {
+        return base64Decode(payload.body.data);
       }
-    });
+    } else {
+      return '';
+    }
   }
 
   var initialText: string = '';
@@ -188,58 +186,58 @@ async function getText(
     initialText = base64Decode(payload.body?.data);
   }
 
-  let piecesOfText = await Bluebird.map(payload.parts, async (part) => {
-    let text: string = '';
+  let piecesOfText: string[] = [];
+  if (payload.parts)
+    piecesOfText = await Bluebird.map(payload.parts, async (part) => {
+      let text: string = '';
 
-    if (part.filename) {
-      // if this part represents an attachment, get the text from the attachment too!
-      if (part.body?.attachmentId) {
-        if (part.mimeType === 'text/plain') {
-          const attachment = await getAttachment(
-            auth,
-            messageId,
-            part.body.attachmentId
-          );
+      if (part.filename) {
+        // if this part represents an attachment, get the text from the attachment too!
+        if (part.body?.attachmentId) {
+          if (part.mimeType === 'text/plain') {
+            const attachment = await getAttachment(
+              gmail,
+              messageId,
+              part.body.attachmentId
+            );
 
-          if (attachment?.data) {
-            text += base64Decode(attachment?.data);
+            if (attachment?.data) {
+              text += base64Decode(attachment?.data);
+            }
+          }
+        } else if (part.body?.data) {
+          // base64 decode the attachment data from the part and then get text
+          if (part.mimeType === 'text/plain') {
+            if (part.body?.data) {
+              text += base64Decode(part.body?.data);
+            }
           }
         }
-      } else if (part.body?.data) {
-        // base64 decode the attachment data from the part and then get text
-        if (part.mimeType === 'text/plain') {
+      } else {
+        if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
           if (part.body?.data) {
             text += base64Decode(part.body?.data);
           }
-        }
-      }
-    } else {
-      if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-        if (part.body?.data) {
-          text += base64Decode(part.body?.data);
-        }
-      } else {
-        // it's either a container part so we get the text from its subparts
-        // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
+        } else {
+          // it's either a container part so we get the text from its subparts
+          // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
 
-        // also: wrap this await in a try/catch clause
-        text += await getText(auth, messageId, part);
+          // also: wrap this await in a try/catch clause
+          text += await getText(gmail, messageId, part);
+        }
       }
-    }
-    return text;
-  });
+      return text;
+    });
 
   piecesOfText.push(initialText);
   return piecesOfText.join('\n');
 }
 
 async function getAttachment(
-  auth: OAuth2Client,
+  gmail: gmail_v1.Gmail,
   messageId: string,
   attachmentId: string
 ): Promise<gmail_v1.Schema$MessagePartBody | null> {
-  const gmail = google.gmail({ version: 'v1', auth });
-
   const response = await gmail.users.messages.attachments.get({
     userId: 'me',
     messageId: messageId,
@@ -313,14 +311,14 @@ async function getPublicUrls(urls: string[]): Promise<string[]> {
 
 // Gets all the URLs from an email message, given its ID
 async function getUrlsFromMessage(
-  auth: OAuth2Client,
+  gmail: gmail_v1.Gmail,
   messageId: string
 ): Promise<string[] | never[] | undefined> {
-  const message = await getMessage(auth, messageId);
+  const message = await getMessage(gmail, messageId);
 
   if (message?.payload) {
     // get the text from our email message
-    const text = await getText(auth, messageId, message.payload);
+    const text = await getText(gmail, messageId, message.payload);
 
     // extract URLs from our text
     const newUrls: string[] = Array.from(getUrls(text));
@@ -334,12 +332,12 @@ async function getUrlsFromMessage(
 }
 
 // Extracts all the URLs from an email inbox
-async function getAllUrls(auth: OAuth2Client): Promise<string[]> {
-  const allMessageIds = await getAllMessageIds(auth);
+async function getAllUrls(gmail: gmail_v1.Gmail): Promise<string[]> {
+  const allMessageIds = await getAllMessageIds(gmail);
 
   const listOfLists = await Bluebird.map(
     allMessageIds,
-    (messageId) => getUrlsFromMessage(auth, messageId),
+    (messageId) => getUrlsFromMessage(gmail, messageId),
     { concurrency: 40 }
   );
 
@@ -348,8 +346,8 @@ async function getAllUrls(auth: OAuth2Client): Promise<string[]> {
   return allUrls;
 }
 
-async function main(auth: OAuth2Client) {
-  const allUrls = await getAllUrls(auth);
+async function main(gmail: gmail_v1.Gmail) {
+  const allUrls = await getAllUrls(gmail);
 
   console.log('all URLs:');
   console.log(allUrls);
