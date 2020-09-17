@@ -296,29 +296,26 @@ function getUniqueUrls(urls: string[]) {
 }
 
 // Gets all the public URLs from a list of URLs
-function getPublicUrls(urls: string[]): Promise<string[]> {
-  return Promise.all(
-    urls.map(async (url) => {
-      console.log(`Checking if url ${url} is public`);
+async function getPublicUrls(urls: string[]): Promise<string[]> {
+  const listOfListsOfPublicUrls = await Bluebird.map(urls, async (url) => {
+    console.log(`Checking if url ${url} is public`);
 
-      const response = await axios.get(url);
+    const response = await axios.get(url);
 
-      let publicUrls = [];
-      if (response.status >= 200 && response.status <= 301) {
-        console.log(`Found public URL: ${url}`);
-        publicUrls.push(url);
-      }
-      return publicUrls;
-    })
-  )
-    .then((listOfListsOfPublicUrls) => {
-      let entireList: string[] = [];
-      listOfListsOfPublicUrls.forEach(
-        (ourList) => (entireList = entireList.concat(ourList))
-      );
-      return entireList;
-    })
-    .catch((_err) => []);
+    let publicUrls = [];
+    if (response.status >= 200 && response.status <= 301) {
+      console.log(`Found public URL: ${url}`);
+      publicUrls.push(url);
+    }
+    return publicUrls;
+  });
+
+  let entireList: string[] = [];
+  listOfListsOfPublicUrls.forEach(
+    (ourList) => (entireList = entireList.concat(ourList))
+  );
+
+  return entireList;
 }
 
 // Gets all the URLs from an email message, given its ID
