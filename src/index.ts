@@ -148,20 +148,12 @@ async function getMessage(
 ): Promise<gmail_v1.Schema$Message | null> {
   const gmail = google.gmail({ version: 'v1', auth });
 
-  return gmail.users.messages
-    .get({
-      userId: 'me',
-      id: messageId,
-    })
-    .then((response) => {
-      return response.data;
-    })
-    .catch((err) => {
-      console.log(`Failed to get message with ID ${messageId}: ${err}`);
-      return null;
-    });
+  const response = await gmail.users.messages.get({
+    userId: 'me',
+    id: messageId,
+  });
 
-  // TODO: Handle case if our API request fails
+  return response.data;
 }
 
 // Decodes a base64 encoded string
@@ -251,17 +243,14 @@ async function getAttachment(
   attachmentId: string
 ): Promise<gmail_v1.Schema$MessagePartBody | null> {
   const gmail = google.gmail({ version: 'v1', auth });
-  return gmail.users.messages.attachments
-    .get({
-      userId: 'me',
-      messageId: messageId,
-      id: attachmentId,
-    })
-    .then((response) => response.data)
-    .catch((_err) => {
-      console.log(`Failed to get attachment with ID ${attachmentId}`);
-      return null;
-    });
+
+  const response = await gmail.users.messages.attachments.get({
+    userId: 'me',
+    messageId: messageId,
+    id: attachmentId,
+  });
+
+  return response.data;
 }
 
 // Gets the URLs that look like they're of cloud based file links
@@ -309,24 +298,17 @@ function getUniqueUrls(urls: string[]) {
 // Gets all the public URLs from a list of URLs
 function getPublicUrls(urls: string[]): Promise<string[]> {
   return Promise.all(
-    urls.map((url) => {
+    urls.map(async (url) => {
       console.log(`Checking if url ${url} is public`);
-      return axios
-        .get(url)
-        .then((response) => {
-          let publicUrls = [];
-          if (response.status >= 200 && response.status <= 301) {
-            console.log(`Found public URL: ${url}`);
-            publicUrls.push(url);
-          }
-          return publicUrls;
-        })
-        .catch((err) => {
-          console.log(
-            `Error occurred when fetching URL ${url} to check if it's public: ${err}`
-          );
-          return [];
-        });
+
+      const response = await axios.get(url);
+
+      let publicUrls = [];
+      if (response.status >= 200 && response.status <= 301) {
+        console.log(`Found public URL: ${url}`);
+        publicUrls.push(url);
+      }
+      return publicUrls;
     })
   )
     .then((listOfListsOfPublicUrls) => {
@@ -410,3 +392,7 @@ async function main(auth: OAuth2Client) {
 // I also can have Gianluca or someone else comment on my code to make sure it's high quality
 
 // I also want to remove "auth" as an argument from my methods
+
+// To do: I should not have url as both a variable name and as an imported module
+
+// I should move from Promise.all to Bluebird.map
