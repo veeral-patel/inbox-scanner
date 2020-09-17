@@ -293,25 +293,40 @@ function urlWithoutQueryParameters(theUrl: string): string {
   return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
 }
 
+// to do: switch to async/await
 // Gets all the public URLs from a list of URLs
 async function getPublicUrls(urls: string[]): Promise<string[]> {
-  let publicUrls: (string | null)[] = await Bluebird.map(urls, async (url) => {
-    console.log(`Checking if url ${url} is public`);
-
-    const response = await axios.get(url);
-
-    if (response.status >= 200 && response.status <= 301) {
-      console.log(`Found public URL: ${url}`);
-      return url;
+  return Bluebird.map(urls, (theUrl) => {
+    if (
+      isPublicDropboxFileLink(theUrl) ||
+      isPublicGoogleDriveFileLink(theUrl)
+    ) {
+      return theUrl;
     }
-
     return null;
+  }).then((results) => {
+    let publicUrls: string[] = [];
+    results.forEach((result) => {
+      if (result) publicUrls.push(result);
+    });
+    return publicUrls;
   });
+}
 
-  let filteredPublicUrls: string[] = [];
-  publicUrls.forEach((url) => url && filteredPublicUrls.push(url));
+async function isPublicDropboxFileLink(theUrl: string): Promise<boolean> {
+  if (isDropboxFileLink(theUrl)) {
+    const response = await axios.get(theUrl);
+    return response.status === 301; // to do: check if this status code is right
+  }
+  return false;
+}
 
-  return filteredPublicUrls;
+async function isPublicGoogleDriveFileLink(theUrl: string) {
+  if (isGoogleDriveFileLink(theUrl)) {
+    const response = await axios.get(theUrl);
+    return response.status === 200; // to do: check if this status code is right
+  }
+  return false;
 }
 
 // Gets all the URLs from an email message, given its ID
@@ -393,6 +408,8 @@ async function main(gmail: gmail_v1.Gmail) {
 // to do: remove console.log statements from throughout my code - MAYBE
 
 // to do: make my functions easier to test. remove side effects, try to create as many pure functions as I can
-// that map some input to some output
+// that map some input to some output. minimize code paths in each function
 
 // to do: start writing tests for my easy to test functions
+
+// also: each function should be written at the right abstraction layer. don't violate abstraction barriers
