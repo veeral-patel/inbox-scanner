@@ -6,7 +6,11 @@ import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 import urlModule from 'url';
 import { base64Decode } from './lib/base64';
-import { isDropboxFileLink, isGoogleDriveFileLink } from './lib/file_link';
+import {
+  getFileLinks,
+  isDropboxFileLink,
+  isGoogleDriveFileLink,
+} from './lib/file_link';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -243,13 +247,6 @@ async function getAttachment(
   return response.data;
 }
 
-// Gets the URLs that look like they're of cloud based file links
-function getFileUrls(urls: string[]): string[] {
-  return urls.filter(
-    (theUrl) => isGoogleDriveFileLink(theUrl) || isDropboxFileLink(theUrl)
-  );
-}
-
 function getUniqueUrls(urls: string[]) {
   let uniqueFileUrls: string[] = [];
 
@@ -350,7 +347,7 @@ async function main(gmail: gmail_v1.Gmail) {
   console.log('all URLs:');
   console.log(allUrls);
 
-  const fileUrls = getFileUrls(allUrls);
+  const fileUrls = getFileLinks(allUrls);
 
   console.log('file URLs:');
   console.log(fileUrls);
