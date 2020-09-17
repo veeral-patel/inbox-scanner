@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { Promise as Bluebird } from 'bluebird';
 import fs from 'fs';
 import getUrls from 'get-urls';
@@ -6,11 +5,11 @@ import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 import urlModule from 'url';
 import { base64Decode } from './lib/base64';
+import { getFileLinks } from './lib/file_link';
 import {
-  getFileLinks,
-  isDropboxFileLink,
-  isGoogleDriveFileLink,
-} from './lib/file_link';
+  isPublicDropboxFileLink,
+  isPublicGoogleDriveFileLink,
+} from './lib/public_file_link';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -286,22 +285,6 @@ async function getPublicUrls(urls: string[]): Promise<string[]> {
     });
     return publicUrls;
   });
-}
-
-async function isPublicDropboxFileLink(theUrl: string): Promise<boolean> {
-  if (isDropboxFileLink(theUrl)) {
-    const response = await axios.get(theUrl);
-    return response.status === 301; // to do: check if this status code is right
-  }
-  return false;
-}
-
-async function isPublicGoogleDriveFileLink(theUrl: string) {
-  if (isGoogleDriveFileLink(theUrl)) {
-    const response = await axios.get(theUrl);
-    return response.status === 200; // to do: check if this status code is right
-  }
-  return false;
 }
 
 // Gets all the URLs from an email message, given its ID
