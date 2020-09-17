@@ -5,6 +5,8 @@ import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 import urlModule from 'url';
+import { base64Decode } from './lib/base64';
+import { isDropboxFileLink, isGoogleDriveFileLink } from './lib/file_link';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -155,12 +157,6 @@ async function getMessage(
   return response.data;
 }
 
-// Decodes a base64 encoded string
-export function base64Decode(input: string): string {
-  let buff = new Buffer(input, 'base64');
-  return buff.toString('ascii');
-}
-
 // Recursively traverses an email's payload (which is a tree of MIME parts) and returns
 // combined text from the plain, html parts
 async function getText(
@@ -252,24 +248,6 @@ function getFileUrls(urls: string[]): string[] {
   return urls.filter(
     (theUrl) => isGoogleDriveFileLink(theUrl) || isDropboxFileLink(theUrl)
   );
-}
-
-function isGoogleDriveFileLink(theUrl: string) {
-  const REQUIRED_SUBSTRINGS: string[] = [
-    'drive.google.com',
-    'docs.google.com',
-    'sheets.google.com',
-    'forms.google.com',
-    'slides.google.com',
-  ];
-
-  return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
-}
-
-function isDropboxFileLink(theUrl: string) {
-  const REQUIRED_SUBSTRINGS = ['dropbox.com/s/', 'dropbox.com/scl/'];
-
-  return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
 }
 
 function getUniqueUrls(urls: string[]) {
