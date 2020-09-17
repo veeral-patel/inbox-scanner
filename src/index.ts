@@ -256,28 +256,27 @@ async function getAttachment(
 
 // Gets the URLs that look like they're of cloud based file links
 function getFileUrls(urls: string[]): string[] {
-  let fileUrls = urls.filter((theUrl) => {
-    const parsed = url.parse(theUrl);
-    const urlHost = parsed.host;
+  return urls.filter(
+    (theUrl) => isGoogleDriveFileLink(theUrl) || isDropboxFileLink(theUrl)
+  );
+}
 
-    if (!urlHost) return false;
+function isGoogleDriveFileLink(theUrl: string) {
+  const REQUIRED_SUBSTRINGS: string[] = [
+    'drive.google.com',
+    'docs.google.com',
+    'sheets.google.com',
+    'forms.google.com',
+    'slides.google.com',
+  ];
 
-    const GOOGLE_DRIVE_HOSTNAMES: string[] = [
-      'drive.google.com',
-      'docs.google.com',
-      'sheets.google.com',
-      'forms.google.com',
-      'slides.google.com',
-    ];
+  return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
+}
 
-    const isGoogleDriveFile = GOOGLE_DRIVE_HOSTNAMES.includes(urlHost);
-    const isDropboxFile =
-      theUrl.includes('dropbox.com/s/') || theUrl.includes('dropbox.com/scl/');
+function isDropboxFileLink(theUrl: string) {
+  const REQUIRED_SUBSTRINGS = ['dropbox.com/s/', 'dropbox.com/scl/'];
 
-    return isGoogleDriveFile || isDropboxFile;
-  });
-
-  return fileUrls;
+  return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
 }
 
 function getUniqueUrls(urls: string[]) {
