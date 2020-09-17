@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Promise as Bluebird } from 'bluebird';
 import fs from 'fs';
 import getUrls from 'get-urls';
+import { OAuth2Client } from 'google-auth-library';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 import url from 'url';
@@ -29,6 +30,7 @@ fs.readFile('credentials.json', (err, content) => {
  */
 function authorize(credentials: any, callback: any) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
+
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
     client_secret,
@@ -77,7 +79,7 @@ function getNewToken(oAuth2Client: any, callback: any) {
 // Returns a promise that resolves to (1) the message IDs from the page with the associated page token
 // and (2) the page token to use when retrieving our next set of message IDs.
 async function getMessageIds(
-  auth: any,
+  auth: OAuth2Client,
   pageToken: string | undefined
 ): Promise<[string[], string | undefined]> {
   const gmail = google.gmail({ version: 'v1', auth });
@@ -110,7 +112,7 @@ async function getMessageIds(
 
 // (Gmail forces us to make separate calls to retrieve the emails associated with each
 // message ID.)
-async function getAllMessageIds(auth: any): Promise<string[]> {
+async function getAllMessageIds(auth: OAuth2Client): Promise<string[]> {
   let nextPageToken: string | undefined = undefined;
   let firstExecution = true;
 
@@ -141,7 +143,7 @@ async function getAllMessageIds(auth: any): Promise<string[]> {
 
 // Fetches a message from our API given a message ID
 async function getMessage(
-  auth: any,
+  auth: OAuth2Client,
   messageId: string
 ): Promise<gmail_v1.Schema$Message | null> {
   const gmail = google.gmail({ version: 'v1', auth });
@@ -171,7 +173,7 @@ function base64Decode(input: string): string {
 // Recursively traverses an email's payload (which is a tree of MIME parts) and returns
 // combined text from the plain, html parts
 function getText(
-  auth: any,
+  auth: OAuth2Client,
   messageId: string,
   payload: gmail_v1.Schema$MessagePart
 ): Promise<string> {
@@ -244,7 +246,7 @@ function getText(
 }
 
 async function getAttachment(
-  auth: any,
+  auth: OAuth2Client,
   messageId: string,
   attachmentId: string
 ): Promise<gmail_v1.Schema$MessagePartBody | null> {
@@ -339,7 +341,7 @@ function getPublicUrls(urls: string[]): Promise<string[]> {
 
 // Gets all the URLs from an email message, given its ID
 async function getUrlsFromMessage(
-  auth: any,
+  auth: OAuth2Client,
   messageId: string
 ): Promise<string[] | never[] | undefined> {
   const message = await getMessage(auth, messageId);
@@ -360,7 +362,7 @@ async function getUrlsFromMessage(
 }
 
 // Extracts all the URLs from an email inbox
-async function getAllUrls(auth: any): Promise<string[]> {
+async function getAllUrls(auth: OAuth2Client): Promise<string[]> {
   const allMessageIds = await getAllMessageIds(auth);
   return Bluebird.map(
     allMessageIds,
@@ -376,7 +378,7 @@ async function getAllUrls(auth: any): Promise<string[]> {
 }
 
 // Get all the inbox's email message IDs, then print the subject line for each one
-async function main(auth: any) {
+async function main(auth: OAuth2Client) {
   const allUrls = await getAllUrls(auth);
 
   console.log('all URLs:');
