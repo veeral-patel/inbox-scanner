@@ -17,7 +17,9 @@ async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
 async function isPublicGoogleDriveFileUrl(theUrl: string) {
   if (isGoogleDriveFileUrl(theUrl)) {
     // [Error case] Promise fails
-    const response = await axios.get(theUrl);
+    const response = await axios.get(theUrl).catch((err: Error) => {
+      throw err;
+    });
     return response.status === 200;
   }
   return false;
@@ -30,6 +32,8 @@ export async function getPublicUrls(urls: string[]): Promise<string[]> {
     if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl))
       return theUrl;
     return null;
+  }).catch((err: Error) => {
+    throw err;
   });
 
   return publicUrls.filter(notEmpty);

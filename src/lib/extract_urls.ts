@@ -9,9 +9,12 @@ export async function getUrlsFromMessages(
   messages: gmail_v1.Schema$Message[]
 ): Promise<string[]> {
   // [Error case] Promise fails
-  const listOflistsOfUrls = await Bluebird.map(messages, async (message) =>
-    getUrlsFromMessage(gmail, message)
-  );
+  const listOflistsOfUrls: string[][] = await Bluebird.map(
+    messages,
+    async (message) => getUrlsFromMessage(gmail, message)
+  ).catch((err: Error) => {
+    throw err;
+  });
 
   return flatten(listOflistsOfUrls);
 }
@@ -24,7 +27,11 @@ async function getUrlsFromMessage(
   if (!message.id || !message.payload) return [];
 
   // [Error case] Promise fails
-  const text = await getText(gmail, message.id, message.payload);
+  const text = await getText(gmail, message.id, message.payload).catch(
+    (err: Error) => {
+      throw err;
+    }
+  );
 
   const foundUrls: string[] = Array.from(getUrls(text));
 
@@ -38,11 +45,15 @@ async function getAttachment(
   attachmentId: string
 ): Promise<gmail_v1.Schema$MessagePartBody | null> {
   // [Error case] Promise fails
-  const response = await gmail.users.messages.attachments.get({
-    userId: 'me',
-    messageId: messageId,
-    id: attachmentId,
-  });
+  const response = await gmail.users.messages.attachments
+    .get({
+      userId: 'me',
+      messageId: messageId,
+      id: attachmentId,
+    })
+    .catch((err: Error) => {
+      throw err;
+    });
 
   return response.data;
 }
@@ -88,7 +99,9 @@ async function getText(
               gmail,
               messageId,
               part.body.attachmentId
-            );
+            ).catch((err: Error) => {
+              throw err;
+            });
 
             if (attachment?.data) {
               text += base64Decode(attachment?.data);
@@ -112,7 +125,12 @@ async function getText(
           // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
 
           // [Error case] Promise fails
-          text += await getText(gmail, messageId, part);
+          const additionalText = await getText(gmail, messageId, part).catch(
+            (err: Error) => {
+              throw err;
+            }
+          );
+          text += additionalText;
         }
       }
       return text;

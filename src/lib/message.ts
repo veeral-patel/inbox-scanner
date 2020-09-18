@@ -9,12 +9,16 @@ async function getMessageIds(
   pageToken: string | undefined
 ): Promise<[string[], string | undefined]> {
   // [Error case] Promise fails
-  const response = await gmail.users.messages.list({
-    userId: 'me',
-    pageToken,
-    includeSpamTrash: true,
-    q: 'patrick6', // to do: comment this out
-  });
+  const response = await gmail.users.messages
+    .list({
+      userId: 'me',
+      pageToken,
+      includeSpamTrash: true,
+      q: 'interview', // to do: comment this out
+    })
+    .catch((err: Error) => {
+      throw err;
+    });
 
   // Extract the message ID from each message object we receive and store our
   // message IDs into an array
@@ -49,7 +53,9 @@ async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
     const [messageIds, newNextPageToken]: [
       string[],
       string | undefined
-    ] = await getMessageIds(gmail, nextPageToken);
+    ] = await getMessageIds(gmail, nextPageToken).catch((err: Error) => {
+      throw err;
+    });
 
     // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
@@ -67,10 +73,14 @@ async function getMessage(
   messageId: string
 ): Promise<gmail_v1.Schema$Message | null> {
   // [Error case] Promise fails
-  const response = await gmail.users.messages.get({
-    userId: 'me',
-    id: messageId,
-  });
+  const response = await gmail.users.messages
+    .get({
+      userId: 'me',
+      id: messageId,
+    })
+    .catch((err: Error) => {
+      throw err;
+    });
 
   return response.data;
 }
@@ -80,14 +90,22 @@ export async function getMessages(
   gmail: gmail_v1.Gmail
 ): Promise<gmail_v1.Schema$Message[]> {
   // [Error case] Promise fails
-  const allMessageIds = await getAllMessageIds(gmail);
+  const allMessageIds = await getAllMessageIds(gmail)
+    .catch((err: Error) => {
+      throw err;
+    })
+    .catch((err: Error) => {
+      throw err;
+    });
 
   // [Error case] Promise fails
   const messages = await Bluebird.map(
     allMessageIds,
     async (messageId) => await getMessage(gmail, messageId),
     { concurrency: 40 } // Limit our in-flight requests to avoid rate limit errors
-  );
+  ).catch((err: Error) => {
+    throw err;
+  });
 
   return messages.filter(notEmpty);
 }
