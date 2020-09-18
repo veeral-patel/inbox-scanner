@@ -53,8 +53,6 @@ export async function getAllMessageIds(
     // Store our received message IDs into our list
     allMessageIds = allMessageIds.concat(messageIds);
 
-    console.log(`Got ${allMessageIds.length} message IDs so far`);
-
     nextPageToken = newNextPageToken;
     firstExecution = false;
   }

@@ -19,8 +19,6 @@ export async function getUrlsFromMessage(
     // extract URLs from our text
     const newUrls: string[] = Array.from(getUrls(text));
 
-    console.log(`Got ${newUrls.length} URLs from message ${messageId}`);
-
     return newUrls;
   }
 
