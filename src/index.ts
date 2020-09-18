@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
+import VError from 'verror';
 import { getUrlsFromMessages } from './lib/extract_urls';
 import { getFileUrls } from './lib/file_url';
 import { getMessages } from './lib/message';
@@ -14,12 +15,28 @@ fs.readFile('credentials.json', (err, content) => {
 
 async function main(gmail: gmail_v1.Gmail) {
   // [Error case] Promise fails
-  const allMessages = await getMessages(gmail);
+  const allMessages = await getMessages(gmail).catch((err: Error) => {
+    const wrappedError = new VError(
+      err,
+      'Failed to retrieve your email messages'
+    );
+    console.error(wrappedError.message);
+    process.exit();
+  });
 
   console.log(`Got ${allMessages.length} message(s)`);
 
   // [Error case] Promise fails
-  const allUrls = await getUrlsFromMessages(gmail, allMessages);
+  const allUrls = await getUrlsFromMessages(gmail, allMessages).catch(
+    (err: Error) => {
+      const wrappedError = new VError(
+        err,
+        'Failed to extract URLs from your email messages'
+      );
+      console.error(wrappedError.message);
+      process.exit();
+    }
+  );
 
   console.log('all URLs:');
   console.log(allUrls);
@@ -30,7 +47,14 @@ async function main(gmail: gmail_v1.Gmail) {
   console.log(fileUrls);
 
   // [Error case] Promise fails
-  const publicUrls = await getPublicUrls(fileUrls);
+  const publicUrls = await getPublicUrls(fileUrls).catch((err: Error) => {
+    const wrappedError = new VError(
+      err,
+      'Failed to identify which of the file links in your email inbox are public'
+    );
+    console.error(wrappedError.message);
+    process.exit();
+  });
 
   console.log('public URLs:');
   console.log(publicUrls);
