@@ -37,7 +37,8 @@
     "doc:publish": "gh-pages -m \"[ci skip] Updates\" -d build/docs",
     "version": "standard-version",
     "reset-hard": "git clean -dfx && git reset --hard && yarn",
-    "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish"
+    "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish",
+    "graph:dependencies": "depcruise --exclude '^node_modules' --output-type dot src | dot -T svg > dependencygraph.svg && open dependencygraph.svg"
   },
   "engines": {
     "node": ">=10"
