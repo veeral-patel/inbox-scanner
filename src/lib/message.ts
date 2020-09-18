@@ -79,15 +79,13 @@ export async function getMessages(
 
   const messages = await Bluebird.map(
     allMessageIds,
-    async (messageId) => {
-      const message = await getMessage(gmail, messageId);
-      return message;
-    },
+    async (messageId) => await getMessage(gmail, messageId),
     { concurrency: 40 } // Limit our in-flight requests to avoid rate limit errors
   );
 
-  let filteredMessages: gmail_v1.Schema$Message[] = [];
-  messages.forEach((message) => message && filteredMessages.push(message));
+  return messages.filter(notNull);
+}
 
-  return filteredMessages;
+function notNull<T>(value: T | null): value is T {
+  return value !== null;
 }
