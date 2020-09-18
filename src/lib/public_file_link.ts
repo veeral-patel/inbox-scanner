@@ -7,7 +7,7 @@ export async function isPublicDropboxFileLink(
 ): Promise<boolean> {
   if (isDropboxFileLink(theUrl)) {
     const response = await axios.get(theUrl);
-    return response.status === 301; // to do: check if this status code is right
+    return response.status === 301;
   }
   return false;
 }
@@ -15,7 +15,7 @@ export async function isPublicDropboxFileLink(
 export async function isPublicGoogleDriveFileLink(theUrl: string) {
   if (isGoogleDriveFileLink(theUrl)) {
     const response = await axios.get(theUrl);
-    return response.status === 200; // to do: check if this status code is right
+    return response.status === 200;
   }
   return false;
 }

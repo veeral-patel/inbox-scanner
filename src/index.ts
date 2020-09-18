@@ -52,12 +52,12 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // I should move from Promise.all to Bluebird.map - DONE
 
-// to do: remove console.log statements from throughout my code - MAYBE
+// to do: remove console.log statements from lib/ - DONE
 
 // to do: make my functions easier to test. remove side effects, try to create as many pure functions as I can
 // that map some input to some output. minimize code paths in each function
 
-// to do: write tests for my testable functions
+// to do: write tests for my testable functions (need to break down)
 
 // also: each function should be written at the right abstraction layer. don't violate abstraction barriers
 
@@ -69,7 +69,7 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // maybe: get travis CI working for this repo
 
-// to do: remove console.log statements from all my lib/* files
+// to do: remove console.log statements from all my lib/* files - DONE
 
 // to do: choose either url or link but don't use both
 
