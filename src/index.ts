@@ -5,10 +5,8 @@ import { authorize } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_link';
 import { getAllUrls, getUniqueUrls } from './lib/urls';
 
-// Load client secrets from a local file.
 fs.readFile('credentials.json', (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
-  // Authorize a client with credentials, then call the Gmail API.
   authorize(JSON.parse(content.toString()), main);
 });
 
