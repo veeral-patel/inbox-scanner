@@ -6,7 +6,7 @@ export function getUniqueUrls(urls: string[]) {
 
   // Remove query params to identify duplicated URLs
   urls.forEach((ourUrl) => {
-    const newUrl = urlWithoutQueryParameters(ourUrl);
+    const newUrl = stripQueryParameters(ourUrl);
     uniqueFileUrls.push(newUrl);
   });
 
@@ -17,7 +17,7 @@ export function getUniqueUrls(urls: string[]) {
 }
 
 // Removes the query parameters from a URL by parsing it and re-assembling it. [Testable]
-function urlWithoutQueryParameters(theUrl: string): string {
+export function stripQueryParameters(theUrl: string): string {
   const parsedUrl = urlModule.parse(theUrl);
   return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
 }
