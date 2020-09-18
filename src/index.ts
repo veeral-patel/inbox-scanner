@@ -38,16 +38,13 @@ async function main(gmail: gmail_v1.Gmail) {
   console.log(uniquePublicUrls);
 }
 
+// ERROR HANDLING - TO DO
+
 // to do: handle errors properly (not with console.log)
-
-// to do: create a gmail account and test my program against it
-
-// also check against my real email account to see how long it takes
-
 // I should have error handling every time I call a promise, whether with .catch
 // or with try/catch in the case of async/await
 
-// I also can have Gianluca or someone else code review my code to make sure it's high quality - LATER
+// TESTING - TO DO
 
 // to do: make my functions easier to test. remove side effects, try to create
 // as many pure functions as I can that map some input to some output. minimize code
@@ -55,14 +52,28 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: write tests for my testable functions (need to break down)
 
-// look through my code in lib/ and improve it
+// also check against my real email account to see how long it takes
+
+// CODE IMPROVEMENT - TO DO
+
+// look through my code in lib/ and improve it. see: https://github.com/goldbergyoni/nodebestpractices
 
 // also: each function should be written at the right abstraction layer. don't violate
 // abstraction barriers
 
+// ONCE THE ABOVE IS DONE --
+
 // to do: remove my q: "patrick6" query parameter
 
+// to do: create a gmail account and test my program against it
+
+// MAYBE ---
+
 // maybe: get travis CI working for this repo
+
+// LATER ---
+
+// I also can have Gianluca or someone else code review my code to make sure it's high quality - LATER
 
 // DONE ---
 
