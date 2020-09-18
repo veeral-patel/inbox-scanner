@@ -1,6 +1,5 @@
 import { Promise as Bluebird } from 'bluebird';
 import fs from 'fs';
-import getUrls from 'get-urls';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 import urlModule from 'url';
@@ -86,78 +85,6 @@ function getNewToken(
       callback(oAuth2Client);
     });
   });
-}
-
-// Returns a promise that resolves to (1) the message IDs from the page with the associated page token
-// and (2) the page token to use when retrieving our next set of message IDs.
-async function getMessageIds(
-  gmail: gmail_v1.Gmail,
-  pageToken: string | undefined
-): Promise<[string[], string | undefined]> {
-  // Call Gmail's API
-  const response = await gmail.users.messages.list({
-    userId: 'me',
-    pageToken,
-    includeSpamTrash: true,
-    q: 'patrick6', // to do: comment this out
-  });
-
-  // Extract the message ID from each message object we receive and store our
-  // message IDs into an array
-  let messageIds: string[] = [];
-  response.data.messages?.forEach(
-    (message) => message.id && messageIds.push(message.id)
-  );
-
-  // Also extract our next page token from our API response
-  let nextPageToken = response.data.nextPageToken || undefined;
-
-  return [messageIds, nextPageToken];
-}
-
-// Returns a promise that resolves to a list of all the email message IDs
-// in the authenticated user's inbox.
-
-// (Gmail forces us to make separate calls to retrieve the emails associated with each
-// message ID.)
-async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
-  let nextPageToken: string | undefined = undefined;
-  let firstExecution = true;
-
-  let allMessageIds: string[] = [];
-
-  // Stop requesting the next set of message IDs from Gmail's API once we get an
-  // empty next page token from the API
-  while (nextPageToken || firstExecution) {
-    // Request the next set of message IDs and next page token
-    const [messageIds, newNextPageToken]: [
-      string[],
-      string | undefined
-    ] = await getMessageIds(gmail, nextPageToken);
-
-    // Store our received message IDs into our list
-    allMessageIds = allMessageIds.concat(messageIds);
-
-    console.log(`Got ${allMessageIds.length} message IDs so far`);
-
-    nextPageToken = newNextPageToken;
-    firstExecution = false;
-  }
-
-  return allMessageIds;
-}
-
-// Fetches a message from our API given a message ID
-async function getMessage(
-  gmail: gmail_v1.Gmail,
-  messageId: string
-): Promise<gmail_v1.Schema$Message | null> {
-  const response = await gmail.users.messages.get({
-    userId: 'me',
-    id: messageId,
-  });
-
-  return response.data;
 }
 
 // Recursively traverses an email's payload (which is a tree of MIME parts) and returns
@@ -287,43 +214,6 @@ async function getPublicUrls(urls: string[]): Promise<string[]> {
   });
 }
 
-// Gets all the URLs from an email message, given its ID
-async function getUrlsFromMessage(
-  gmail: gmail_v1.Gmail,
-  messageId: string
-): Promise<string[] | never[] | undefined> {
-  const message = await getMessage(gmail, messageId);
-
-  if (message?.payload) {
-    // get the text from our email message
-    const text = await getText(gmail, messageId, message.payload);
-
-    // extract URLs from our text
-    const newUrls: string[] = Array.from(getUrls(text));
-
-    console.log(`Got ${newUrls.length} URLs from message ${messageId}`);
-
-    return newUrls;
-  }
-
-  return [];
-}
-
-// Extracts all the URLs from an email inbox
-async function getAllUrls(gmail: gmail_v1.Gmail): Promise<string[]> {
-  const allMessageIds = await getAllMessageIds(gmail);
-
-  const listOfLists = await Bluebird.map(
-    allMessageIds,
-    (messageId) => getUrlsFromMessage(gmail, messageId),
-    { concurrency: 40 }
-  );
-
-  let allUrls: string[] = [];
-  listOfLists.forEach((lst) => lst && (allUrls = allUrls.concat(lst)));
-  return allUrls;
-}
-
 async function main(gmail: gmail_v1.Gmail) {
   const allUrls = await getAllUrls(gmail);
 
@@ -346,7 +236,10 @@ async function main(gmail: gmail_v1.Gmail) {
   console.log(uniquePublicUrls);
 }
 
-// later: handle errors properly (not with console.log)
+// to do: handle errors properly (not with console.log)
+
+// to do: create a gmail account and test my program against it
+// also check against my real email account to see how long it takes
 
 // I should have error handling every time I call a promise, whether with .catch or with try/catch in the case
 // of async/await
@@ -368,6 +261,21 @@ async function main(gmail: gmail_v1.Gmail) {
 // to do: make my functions easier to test. remove side effects, try to create as many pure functions as I can
 // that map some input to some output. minimize code paths in each function
 
-// to do: start writing tests for my easy to test functions
+// to do: write tests for my testable functions
 
 // also: each function should be written at the right abstraction layer. don't violate abstraction barriers
+
+// to do: look at any "to do" comments in my code
+
+// to do: modify getAllUrls so it takes in a list of messages (maybe). want to
+// have a chain: for each message: message > text > urls > file urls > public file urls
+// > unique public file urls
+
+// maybe: get travis CI working for this repo
+
+// to do: remove console.log statements from all my lib/* files
+
+// to do: choose either url or link but don't use both
+
+// to do: look at my files in lib/. are the dependencies only one way, based on the layers above?
+// that's what I want.
