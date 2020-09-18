@@ -52,7 +52,9 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: make my functions easier to test. remove side effects, try to create
 // as many pure functions as I can that map some input to some output. minimize code
-// paths in each function
+// paths in each function - DONE
+
+// to do: make getText easier to test
 
 // to do: write tests for my testable functions
 // in extract_urls.ts
@@ -66,12 +68,14 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // also check against my real email account to see how long it takes
 
-// CODE IMPROVEMENT - TO DO
+// CODE IMPROVEMENT - LATER
 
 // look through my code in lib/ and improve it.
 
 // also: each function should be written at the right abstraction layer. don't violate
 // abstraction barriers
+
+// improve my code based on this repo: https://github.com/goldbergyoni/nodebestpractices
 
 // PRESENTATION - TO DO
 
@@ -87,10 +91,6 @@ async function main(gmail: gmail_v1.Gmail) {
 // in particular, ensure I support the provided `yarn` commands
 
 // to do: create a gmail account and test my program against it
-
-// MAYBE --
-
-// improve my code based on this repo: https://github.com/goldbergyoni/nodebestpractices
 
 // NOT NOW ---
 
