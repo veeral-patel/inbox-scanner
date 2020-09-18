@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Bluebird from 'bluebird';
 import { isDropboxFileLink, isGoogleDriveFileLink } from './file_link';
 
 export async function isPublicDropboxFileLink(
@@ -17,4 +18,24 @@ export async function isPublicGoogleDriveFileLink(theUrl: string) {
     return response.status === 200; // to do: check if this status code is right
   }
   return false;
+}
+
+// to do: switch to async/await
+// Gets all the public URLs from a list of URLs
+export async function getPublicUrls(urls: string[]): Promise<string[]> {
+  return Bluebird.map(urls, (theUrl) => {
+    if (
+      isPublicDropboxFileLink(theUrl) ||
+      isPublicGoogleDriveFileLink(theUrl)
+    ) {
+      return theUrl;
+    }
+    return null;
+  }).then((results) => {
+    let publicUrls: string[] = [];
+    results.forEach((result) => {
+      if (result) publicUrls.push(result);
+    });
+    return publicUrls;
+  });
 }

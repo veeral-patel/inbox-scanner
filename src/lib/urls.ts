@@ -1,9 +1,12 @@
 import Bluebird from 'bluebird';
+import getUrls from 'get-urls';
 import { gmail_v1 } from 'googleapis';
-import { getAllMessageIds } from './message';
+import urlModule from 'url';
+import { getAllMessageIds, getMessage } from './message';
+import { getText } from './text';
 
 // Gets all the URLs from an email message, given its ID
-async function getUrlsFromMessage(
+export async function getUrlsFromMessage(
   gmail: gmail_v1.Gmail,
   messageId: string
 ): Promise<string[] | never[] | undefined> {
@@ -25,7 +28,7 @@ async function getUrlsFromMessage(
 }
 
 // Extracts all the URLs from an email inbox
-async function getAllUrls(gmail: gmail_v1.Gmail): Promise<string[]> {
+export async function getAllUrls(gmail: gmail_v1.Gmail): Promise<string[]> {
   const allMessageIds = await getAllMessageIds(gmail);
 
   const listOfLists = await Bluebird.map(
@@ -37,4 +40,25 @@ async function getAllUrls(gmail: gmail_v1.Gmail): Promise<string[]> {
   let allUrls: string[] = [];
   listOfLists.forEach((lst) => lst && (allUrls = allUrls.concat(lst)));
   return allUrls;
+}
+
+// Removes the query parameters from a URL by parsing it and re-assembling it
+function urlWithoutQueryParameters(theUrl: string): string {
+  const parsedUrl = urlModule.parse(theUrl);
+  return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+}
+
+export function getUniqueUrls(urls: string[]) {
+  let uniqueFileUrls: string[] = [];
+
+  // Remove query params to identify duplicated URLs
+  urls.forEach((ourUrl) => {
+    const newUrl = urlWithoutQueryParameters(ourUrl);
+    uniqueFileUrls.push(newUrl);
+  });
+
+  // Only leave unique URLs in our list
+  uniqueFileUrls = Array.from(new Set(uniqueFileUrls));
+
+  return uniqueFileUrls;
 }

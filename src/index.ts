@@ -1,14 +1,9 @@
-import { Promise as Bluebird } from 'bluebird';
 import fs from 'fs';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
-import urlModule from 'url';
-import { base64Decode } from './lib/base64';
 import { getFileLinks } from './lib/file_link';
-import {
-  isPublicDropboxFileLink,
-  isPublicGoogleDriveFileLink,
-} from './lib/public_file_link';
+import { getPublicUrls } from './lib/public_file_link';
+import { getAllUrls, getUniqueUrls } from './lib/urls';
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -21,7 +16,6 @@ const TOKEN_PATH = 'token.json';
 fs.readFile('credentials.json', (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials, then call the Gmail API.
-  //   authorize(JSON.parse(content), listLabels);
   authorize(JSON.parse(content.toString()), main);
 });
 
@@ -84,133 +78,6 @@ function getNewToken(
       });
       callback(oAuth2Client);
     });
-  });
-}
-
-// Recursively traverses an email's payload (which is a tree of MIME parts) and returns
-// combined text from the plain, html parts
-async function getText(
-  gmail: gmail_v1.Gmail,
-  messageId: string,
-  payload: gmail_v1.Schema$MessagePart
-): Promise<string> {
-  if (!payload?.parts) {
-    if (payload?.body?.data) {
-      if (
-        payload.mimeType === 'text/plain' ||
-        payload.mimeType === 'text/html'
-      ) {
-        return base64Decode(payload.body.data);
-      }
-    } else {
-      return '';
-    }
-  }
-
-  var initialText: string = '';
-  if (payload.body?.data) {
-    initialText = base64Decode(payload.body?.data);
-  }
-
-  let piecesOfText: string[] = [];
-  if (payload.parts)
-    piecesOfText = await Bluebird.map(payload.parts, async (part) => {
-      let text: string = '';
-
-      if (part.filename) {
-        // if this part represents an attachment, get the text from the attachment too!
-        if (part.body?.attachmentId) {
-          if (part.mimeType === 'text/plain') {
-            const attachment = await getAttachment(
-              gmail,
-              messageId,
-              part.body.attachmentId
-            );
-
-            if (attachment?.data) {
-              text += base64Decode(attachment?.data);
-            }
-          }
-        } else if (part.body?.data) {
-          // base64 decode the attachment data from the part and then get text
-          if (part.mimeType === 'text/plain') {
-            if (part.body?.data) {
-              text += base64Decode(part.body?.data);
-            }
-          }
-        }
-      } else {
-        if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-          if (part.body?.data) {
-            text += base64Decode(part.body?.data);
-          }
-        } else {
-          // it's either a container part so we get the text from its subparts
-          // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
-
-          // also: wrap this await in a try/catch clause
-          text += await getText(gmail, messageId, part);
-        }
-      }
-      return text;
-    });
-
-  piecesOfText.push(initialText);
-  return piecesOfText.join('\n');
-}
-
-async function getAttachment(
-  gmail: gmail_v1.Gmail,
-  messageId: string,
-  attachmentId: string
-): Promise<gmail_v1.Schema$MessagePartBody | null> {
-  const response = await gmail.users.messages.attachments.get({
-    userId: 'me',
-    messageId: messageId,
-    id: attachmentId,
-  });
-
-  return response.data;
-}
-
-function getUniqueUrls(urls: string[]) {
-  let uniqueFileUrls: string[] = [];
-
-  // Remove query params to identify duplicated URLs
-  urls.forEach((ourUrl) => {
-    const newUrl = urlWithoutQueryParameters(ourUrl);
-    uniqueFileUrls.push(newUrl);
-  });
-
-  // Only leave unique URLs in our list
-  uniqueFileUrls = Array.from(new Set(uniqueFileUrls));
-
-  return uniqueFileUrls;
-}
-
-// Removes the query parameters from a URL by parsing it and re-assembling it
-function urlWithoutQueryParameters(theUrl: string): string {
-  const parsedUrl = urlModule.parse(theUrl);
-  return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
-}
-
-// to do: switch to async/await
-// Gets all the public URLs from a list of URLs
-async function getPublicUrls(urls: string[]): Promise<string[]> {
-  return Bluebird.map(urls, (theUrl) => {
-    if (
-      isPublicDropboxFileLink(theUrl) ||
-      isPublicGoogleDriveFileLink(theUrl)
-    ) {
-      return theUrl;
-    }
-    return null;
-  }).then((results) => {
-    let publicUrls: string[] = [];
-    results.forEach((result) => {
-      if (result) publicUrls.push(result);
-    });
-    return publicUrls;
   });
 }
 
