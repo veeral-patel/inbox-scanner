@@ -50,7 +50,14 @@ async function main(gmail: gmail_v1.Gmail) {
 // as many pure functions as I can that map some input to some output. minimize code
 // paths in each function
 
-// to do: write tests for my testable functions (need to break down)
+// to do: write tests for my testable functions
+// in extract_urls.ts
+// in file_url.ts
+// in message.ts
+// in oauth.ts
+// in public_file_url.ts
+// in unique_urls.ts
+// first: annotate my functions in lib/ based on their testability (in progress)
 
 // also check against my real email account to see how long it takes
 
@@ -70,6 +77,9 @@ async function main(gmail: gmail_v1.Gmail) {
 // ONCE THE ABOVE IS DONE --
 
 // to do: remove my q: "patrick6" query parameter
+
+// look at the takehome requirements and make sure I follow them
+// in particular, ensure I support the provided `yarn` commands
 
 // to do: create a gmail account and test my program against it
 

@@ -20,7 +20,7 @@ async function isPublicGoogleDriveFileUrl(theUrl: string) {
   return false;
 }
 
-// Gets all the public URLs from a list of URLs
+// Gets all the public URLs from a list of URLs. [Testable]
 export async function getPublicUrls(urls: string[]): Promise<string[]> {
   const results = await Bluebird.map(urls, (theUrl) => {
     if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl)) {

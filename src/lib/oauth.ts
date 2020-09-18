@@ -2,19 +2,16 @@ import fs from 'fs';
 import { gmail_v1, google } from 'googleapis';
 import readline from 'readline';
 
-// If modifying these scopes, delete token.json.
+// The code is in this file is from Gmail's Node.js SDK quickstart.
+
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+
 // The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
+// created automatically when the authorization flow completes for the first time
 const TOKEN_PATH = 'token.json';
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
+// Create an OAuth2 client with the given credentials, and then execute the
+// given callback function [Not testing]
 export function authorize(
   credentials: any,
   callback: (gmail: gmail_v1.Gmail) => void
@@ -37,12 +34,8 @@ export function authorize(
   });
 }
 
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
- */
+// Get and store new token after prompting for user authorization, and then
+// execute the given callback with the authorized OAuth2 client. [Not testing]
 function getNewToken(
   oAuth2Client: any,
   callback: (gmail: gmail_v1.Gmail) => void
