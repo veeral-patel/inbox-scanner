@@ -52,7 +52,7 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // I also want to remove "auth" as an argument from my methods - DONE
 
-// Maybe - remove gmail as an argument from my methods - BUT HOW?
+// Maybe - remove gmail as an argument from my methods - NOT DOING
 
 // To do: I should not have url as both a variable name and as an imported module - DONE
 
@@ -65,7 +65,8 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: write tests for my testable functions (need to break down)
 
-// also: each function should be written at the right abstraction layer. don't violate abstraction barriers
+// also: each function should be written at the right abstraction layer. don't violate
+// abstraction barriers
 
 // to do: look at any "to do" comments in my code - DONE
 
@@ -73,7 +74,7 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: modify getAllUrls so it takes in a list of messages (maybe). want to
 // have a chain: for each message: message > text > urls > file urls > public file urls
-// > unique public file urls
+// > unique public file urls - DONE
 
 // maybe: get travis CI working for this repo
 
@@ -84,5 +85,5 @@ async function main(gmail: gmail_v1.Gmail) {
 // to do: look at my files in lib/. are the dependencies only one way, based on the layers above?
 // that's what I want.
 
-// to do: my lib/ module should only export these 5 functions
+// to do: I should only import these 5 functions in this file - DONE
 // getMessages, getAllUrls, getFileUrls, getPublicUrls, getUniqueUrls
