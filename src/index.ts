@@ -67,13 +67,11 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // ERROR HANDLING - TO DO
 
-// to do: handle errors properly (not with console.log).
-// do this by handling all operational errors using the steps from the HN comment, eliminating
-// programmer errors, wrapping operational errors. see the joyent article
-// (https://www.joyent.com/node-js/production/design/errors) and verror (https://github.com/joyent/node-verror)
+// identify error cases
+// - annotate all my await clauses as error cases - DONE
 
-// I should have error handling every time I call a promise, whether with .catch
-// or with try/catch in the case of async/await
+// add catch clauses to handle my error cases
+// - in index.ts - DONE
 
 // TESTING - TO DO
 
