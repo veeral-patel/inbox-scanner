@@ -1,5 +1,6 @@
 import Bluebird from 'bluebird';
 import { gmail_v1 } from 'googleapis';
+import { notEmpty } from './util';
 
 // Returns a promise that resolves to (1) the message IDs from the page with the associated page token
 // and (2) the page token to use when retrieving our next set of message IDs. [Not testing]
@@ -83,9 +84,5 @@ export async function getMessages(
     { concurrency: 40 } // Limit our in-flight requests to avoid rate limit errors
   );
 
-  return messages.filter(notNull);
-}
-
-function notNull<T>(value: T | null): value is T {
-  return value !== null;
+  return messages.filter(notEmpty);
 }
