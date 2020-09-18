@@ -1,8 +1,9 @@
 import Bluebird from 'bluebird';
 import getUrls from 'get-urls';
 import { gmail_v1 } from 'googleapis';
+import { flatten } from './util';
 
-// [Not testing]
+// [Testable]
 export async function getUrlsFromMessages(
   gmail: gmail_v1.Gmail,
   messages: gmail_v1.Schema$Message[]
@@ -11,11 +12,7 @@ export async function getUrlsFromMessages(
     getUrlsFromMessage(gmail, message)
   );
 
-  let allUrls: string[] = [];
-  listOflistsOfUrls.forEach((lst) => {
-    if (lst) allUrls = allUrls.concat(lst);
-  });
-  return allUrls;
+  return flatten(listOflistsOfUrls);
 }
 
 // [Testable]
