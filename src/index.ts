@@ -61,7 +61,9 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // also: each function should be written at the right abstraction layer. don't violate abstraction barriers
 
-// to do: look at any "to do" comments in my code
+// to do: look at any "to do" comments in my code - DONE
+
+// to do: remove my q: "patrick6" query parameter
 
 // to do: modify getAllUrls so it takes in a list of messages (maybe). want to
 // have a chain: for each message: message > text > urls > file urls > public file urls
