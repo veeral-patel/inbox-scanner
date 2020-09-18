@@ -8,6 +8,7 @@ export async function getUrlsFromMessages(
   gmail: gmail_v1.Gmail,
   messages: gmail_v1.Schema$Message[]
 ): Promise<string[]> {
+  // [Error case] Promise fails
   const listOflistsOfUrls = await Bluebird.map(messages, async (message) =>
     getUrlsFromMessage(gmail, message)
   );
@@ -22,6 +23,7 @@ async function getUrlsFromMessage(
 ) {
   if (!message.id || !message.payload) return [];
 
+  // [Error case] Promise fails
   const text = await getText(gmail, message.id, message.payload);
 
   const foundUrls: string[] = Array.from(getUrls(text));
@@ -35,6 +37,7 @@ async function getAttachment(
   messageId: string,
   attachmentId: string
 ): Promise<gmail_v1.Schema$MessagePartBody | null> {
+  // [Error case] Promise fails
   const response = await gmail.users.messages.attachments.get({
     userId: 'me',
     messageId: messageId,
@@ -72,6 +75,7 @@ async function getText(
 
   let piecesOfText: string[] = [];
   if (payload.parts)
+    // [Error case] Promise fails
     piecesOfText = await Bluebird.map(payload.parts, async (part) => {
       let text: string = '';
 
@@ -79,6 +83,7 @@ async function getText(
         // if this part represents an attachment, get the text from the attachment too!
         if (part.body?.attachmentId) {
           if (part.mimeType === 'text/plain') {
+            // [Error case] Promise fails
             const attachment = await getAttachment(
               gmail,
               messageId,
@@ -106,7 +111,7 @@ async function getText(
           // it's either a container part so we get the text from its subparts
           // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
 
-          // also: wrap this await in a try/catch clause
+          // [Error case] Promise fails
           text += await getText(gmail, messageId, part);
         }
       }

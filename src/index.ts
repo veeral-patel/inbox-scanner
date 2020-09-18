@@ -13,10 +13,12 @@ fs.readFile('credentials.json', (err, content) => {
 });
 
 async function main(gmail: gmail_v1.Gmail) {
+  // [Error case] Promise fails
   const allMessages = await getMessages(gmail);
 
   console.log(`Got ${allMessages.length} message(s)`);
 
+  // [Error case] Promise fails
   const allUrls = await getUrlsFromMessages(gmail, allMessages);
 
   console.log('all URLs:');
@@ -27,6 +29,7 @@ async function main(gmail: gmail_v1.Gmail) {
   console.log('file URLs:');
   console.log(fileUrls);
 
+  // [Error case] Promise fails
   const publicUrls = await getPublicUrls(fileUrls);
 
   console.log('public URLs:');

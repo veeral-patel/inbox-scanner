@@ -8,7 +8,7 @@ async function getMessageIds(
   gmail: gmail_v1.Gmail,
   pageToken: string | undefined
 ): Promise<[string[], string | undefined]> {
-  // Call Gmail's API
+  // [Error case] Promise fails
   const response = await gmail.users.messages.list({
     userId: 'me',
     pageToken,
@@ -44,6 +44,8 @@ async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
   // empty next page token from the API
   while (nextPageToken || firstExecution) {
     // Request the next set of message IDs and next page token
+
+    // [Error case] Promise fails
     const [messageIds, newNextPageToken]: [
       string[],
       string | undefined
@@ -64,6 +66,7 @@ async function getMessage(
   gmail: gmail_v1.Gmail,
   messageId: string
 ): Promise<gmail_v1.Schema$Message | null> {
+  // [Error case] Promise fails
   const response = await gmail.users.messages.get({
     userId: 'me',
     id: messageId,
@@ -76,8 +79,10 @@ async function getMessage(
 export async function getMessages(
   gmail: gmail_v1.Gmail
 ): Promise<gmail_v1.Schema$Message[]> {
+  // [Error case] Promise fails
   const allMessageIds = await getAllMessageIds(gmail);
 
+  // [Error case] Promise fails
   const messages = await Bluebird.map(
     allMessageIds,
     async (messageId) => await getMessage(gmail, messageId),

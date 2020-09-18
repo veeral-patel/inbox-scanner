@@ -6,6 +6,7 @@ import { notEmpty } from './util';
 // [Testable]
 async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
   if (isDropboxFileUrl(theUrl)) {
+    // [Error case] Promise fails
     const response = await axios.get(theUrl);
     return response.status === 301;
   }
@@ -23,6 +24,7 @@ async function isPublicGoogleDriveFileUrl(theUrl: string) {
 
 // Gets all the public URLs from a list of URLs. [Testable]
 export async function getPublicUrls(urls: string[]): Promise<string[]> {
+  // [Error case] Promise fails
   const publicUrls = await Bluebird.map(urls, (theUrl) => {
     if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl))
       return theUrl;
