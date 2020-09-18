@@ -4,33 +4,27 @@ import { gmail_v1 } from 'googleapis';
 import { getMessage } from './message';
 import { getText } from './text';
 
-// Gets all the URLs from an email message, given its ID
-export async function getUrlsFromMessage(
+export async function getUrlsFromMessages(
   gmail: gmail_v1.Gmail,
-  messageId: string
-): Promise<string[] | never[] | undefined> {
-  const message = await getMessage(gmail, messageId);
-
-  if (message?.payload) {
-    // get the text from our email message
-    const text = await getText(gmail, messageId, message.payload);
-
-    // extract URLs from our text
-    const newUrls: string[] = Array.from(getUrls(text));
-
-    return newUrls;
-  }
-
-  return [];
-}
-
-export async function getAllUrls(
-  gmail: gmail_v1.Gmail,
-  allMessageIds: string[]
+  messageIds: string[]
 ): Promise<string[]> {
   const listOfLists = await Bluebird.map(
-    allMessageIds,
-    (messageId) => getUrlsFromMessage(gmail, messageId),
+    messageIds,
+    async (messageId) => {
+      const message = await getMessage(gmail, messageId);
+
+      if (message?.payload) {
+        // get the text from our email message
+        const text = await getText(gmail, messageId, message.payload);
+
+        // extract URLs from our text
+        const newUrls: string[] = Array.from(getUrls(text));
+
+        return newUrls;
+      }
+
+      return [];
+    },
     { concurrency: 40 }
   );
 
