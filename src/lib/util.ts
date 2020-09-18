@@ -10,3 +10,7 @@ export function flatten<T>(listOfLists: T[][]): T[] {
   });
   return flattenedList;
 }
+
+export function withoutDuplicates<T>(list: T[]): T[] {
+  return Array.from(new Set(list));
+}
