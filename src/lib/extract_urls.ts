@@ -27,6 +27,7 @@ export async function getUrlsFromMessages(
   return allUrls;
 }
 
+// [Not testing]
 async function getAttachment(
   gmail: gmail_v1.Gmail,
   messageId: string,
@@ -41,7 +42,9 @@ async function getAttachment(
   return response.data;
 }
 
-// combined text from the plain, html parts
+// [Make testable]
+// Extracts the text from an email message by recursively parsing its MIME content tree
+// and base64 decoding any plain text or html parts
 async function getText(
   gmail: gmail_v1.Gmail,
   messageId: string,
@@ -112,7 +115,7 @@ async function getText(
   return piecesOfText.join('\n');
 }
 
-// Decodes a base64 encoded string
+// Decodes a base64 encoded string. [Testable]
 function base64Decode(input: string): string {
   let buff = new Buffer(input, 'base64');
   return buff.toString('ascii');

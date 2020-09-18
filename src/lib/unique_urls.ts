@@ -1,5 +1,6 @@
 import urlModule from 'url';
 
+// [Make testable]
 export function getUniqueUrls(urls: string[]) {
   let uniqueFileUrls: string[] = [];
 
@@ -15,7 +16,7 @@ export function getUniqueUrls(urls: string[]) {
   return uniqueFileUrls;
 }
 
-// Removes the query parameters from a URL by parsing it and re-assembling it
+// Removes the query parameters from a URL by parsing it and re-assembling it. [Testable]
 function urlWithoutQueryParameters(theUrl: string): string {
   const parsedUrl = urlModule.parse(theUrl);
   return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
