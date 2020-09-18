@@ -2,7 +2,7 @@ import axios from 'axios';
 import Bluebird from 'bluebird';
 import { isDropboxFileUrl, isGoogleDriveFileUrl } from './file_url';
 
-export async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
+async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
   if (isDropboxFileUrl(theUrl)) {
     const response = await axios.get(theUrl);
     return response.status === 301;
@@ -10,7 +10,7 @@ export async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
   return false;
 }
 
-export async function isPublicGoogleDriveFileUrl(theUrl: string) {
+async function isPublicGoogleDriveFileUrl(theUrl: string) {
   if (isGoogleDriveFileUrl(theUrl)) {
     const response = await axios.get(theUrl);
     return response.status === 200;

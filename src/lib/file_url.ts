@@ -8,21 +8,19 @@ export function getFileUrls(urls: string[]): string[] {
 // Outputs whether an URL is a Google Drive file url by simply checking
 // if the URL contains one of a few substrings
 export function isGoogleDriveFileUrl(theUrl: string): boolean {
-  const REQUIRED_SUBSTRINGS: string[] = [
+  return [
     'drive.google.com',
     'docs.google.com',
     'sheets.google.com',
     'forms.google.com',
     'slides.google.com',
-  ];
-
-  return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
+  ].some((host) => theUrl.includes(host));
 }
 
 // Outputs whether an URL is a Dropbox file url by simply checking
 // if the URL contains one of a few substrings
 export function isDropboxFileUrl(theUrl: string): boolean {
-  const REQUIRED_SUBSTRINGS = ['dropbox.com/s/', 'dropbox.com/scl/'];
-
-  return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
+  return ['dropbox.com/s/', 'dropbox.com/scl/'].some((host) =>
+    theUrl.includes(host)
+  );
 }

@@ -1,9 +1,9 @@
 import Bluebird from 'bluebird';
-// Returns a promise that resolves to (1) the message IDs from the page with the associated page token
 import { gmail_v1 } from 'googleapis';
 
+// Returns a promise that resolves to (1) the message IDs from the page with the associated page token
 // and (2) the page token to use when retrieving our next set of message IDs.
-export async function getMessageIds(
+async function getMessageIds(
   gmail: gmail_v1.Gmail,
   pageToken: string | undefined
 ): Promise<[string[], string | undefined]> {
@@ -33,9 +33,7 @@ export async function getMessageIds(
 
 // (Gmail forces us to make separate calls to retrieve the emails associated with each
 // message ID.)
-export async function getAllMessageIds(
-  gmail: gmail_v1.Gmail
-): Promise<string[]> {
+async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
   let nextPageToken: string | undefined = undefined;
   let firstExecution = true;
 
@@ -60,6 +58,19 @@ export async function getAllMessageIds(
   return allMessageIds;
 }
 
+// Fetches a message from our API given a message ID
+async function getMessage(
+  gmail: gmail_v1.Gmail,
+  messageId: string
+): Promise<gmail_v1.Schema$Message | null> {
+  const response = await gmail.users.messages.get({
+    userId: 'me',
+    id: messageId,
+  });
+
+  return response.data;
+}
+
 export async function getMessages(
   gmail: gmail_v1.Gmail
 ): Promise<gmail_v1.Schema$Message[]> {
@@ -78,17 +89,4 @@ export async function getMessages(
   messages.forEach((message) => message && filteredMessages.push(message));
 
   return filteredMessages;
-}
-
-// Fetches a message from our API given a message ID
-export async function getMessage(
-  gmail: gmail_v1.Gmail,
-  messageId: string
-): Promise<gmail_v1.Schema$Message | null> {
-  const response = await gmail.users.messages.get({
-    userId: 'me',
-    id: messageId,
-  });
-
-  return response.data;
 }
