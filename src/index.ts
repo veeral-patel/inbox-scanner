@@ -1,9 +1,11 @@
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
+import { getAllUrls } from './lib/extract_urls';
 import { getFileLinks } from './lib/file_link';
+import { getAllMessageIds } from './lib/message';
 import { authorize } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_link';
-import { getAllUrls, getUniqueUrls } from './lib/urls';
+import { getUniqueUrls } from './lib/unique_urls';
 
 fs.readFile('credentials.json', (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
@@ -11,7 +13,9 @@ fs.readFile('credentials.json', (err, content) => {
 });
 
 async function main(gmail: gmail_v1.Gmail) {
-  const allUrls = await getAllUrls(gmail);
+  const allMessageIds = await getAllMessageIds(gmail);
+
+  const allUrls = await getAllUrls(gmail, allMessageIds);
 
   console.log('all URLs:');
   console.log(allUrls);
