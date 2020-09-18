@@ -1,13 +1,13 @@
-// Gets the URLs that look like they're of cloud based file links
+// Gets the URLs that look like they're of cloud based file urls
 export function getFileUrls(urls: string[]): string[] {
   return urls.filter(
-    (theUrl) => isGoogleDriveFileLink(theUrl) || isDropboxFileLink(theUrl)
+    (theUrl) => isGoogleDriveFileUrl(theUrl) || isDropboxFileUrl(theUrl)
   );
 }
 
-// Outputs whether an URL is a Google Drive file link by simply checking
+// Outputs whether an URL is a Google Drive file url by simply checking
 // if the URL contains one of a few substrings
-export function isGoogleDriveFileLink(theUrl: string): boolean {
+export function isGoogleDriveFileUrl(theUrl: string): boolean {
   const REQUIRED_SUBSTRINGS: string[] = [
     'drive.google.com',
     'docs.google.com',
@@ -19,9 +19,9 @@ export function isGoogleDriveFileLink(theUrl: string): boolean {
   return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));
 }
 
-// Outputs whether an URL is a Dropbox file link by simply checking
+// Outputs whether an URL is a Dropbox file url by simply checking
 // if the URL contains one of a few substrings
-export function isDropboxFileLink(theUrl: string): boolean {
+export function isDropboxFileUrl(theUrl: string): boolean {
   const REQUIRED_SUBSTRINGS = ['dropbox.com/s/', 'dropbox.com/scl/'];
 
   return REQUIRED_SUBSTRINGS.some((host) => theUrl.includes(host));

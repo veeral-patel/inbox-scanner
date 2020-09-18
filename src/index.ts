@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
 import { getUrlsFromMessages } from './lib/extract_urls';
-import { getFileUrls } from './lib/file_link';
+import { getFileUrls } from './lib/file_url';
 import { getMessages } from './lib/message';
 import { authorize } from './lib/oauth';
-import { getPublicUrls } from './lib/public_file_link';
+import { getPublicUrls } from './lib/public_file_url';
 import { getUniqueUrls } from './lib/unique_urls';
 
 fs.readFile('credentials.json', (err, content) => {
@@ -41,10 +41,11 @@ async function main(gmail: gmail_v1.Gmail) {
 // to do: handle errors properly (not with console.log)
 
 // to do: create a gmail account and test my program against it
+
 // also check against my real email account to see how long it takes
 
-// I should have error handling every time I call a promise, whether with .catch or with try/catch in the case
-// of async/await
+// I should have error handling every time I call a promise, whether with .catch
+// or with try/catch in the case of async/await
 
 // also: convert my code to use async/await instead of promises - DONE
 
@@ -60,8 +61,9 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: remove console.log statements from lib/ - DONE
 
-// to do: make my functions easier to test. remove side effects, try to create as many pure functions as I can
-// that map some input to some output. minimize code paths in each function
+// to do: make my functions easier to test. remove side effects, try to create
+// as many pure functions as I can that map some input to some output. minimize code
+// paths in each function
 
 // to do: write tests for my testable functions (need to break down)
 
@@ -80,7 +82,7 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: remove console.log statements from all my lib/* files - DONE
 
-// to do: choose either url or link but don't use both
+// to do: choose either url or url but don't use both
 
 // to do: look at my files in lib/. are the dependencies only one way, based on the layers above?
 // that's what I want.
