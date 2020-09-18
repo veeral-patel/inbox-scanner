@@ -1,5 +1,5 @@
+import Bluebird from 'bluebird';
 // Returns a promise that resolves to (1) the message IDs from the page with the associated page token
-
 import { gmail_v1 } from 'googleapis';
 
 // and (2) the page token to use when retrieving our next set of message IDs.
@@ -58,6 +58,26 @@ export async function getAllMessageIds(
   }
 
   return allMessageIds;
+}
+
+export async function getMessages(
+  gmail: gmail_v1.Gmail
+): Promise<gmail_v1.Schema$Message[]> {
+  const allMessageIds = await getAllMessageIds(gmail);
+
+  const messages = await Bluebird.map(
+    allMessageIds,
+    async (messageId) => {
+      const message = await getMessage(gmail, messageId);
+      return message;
+    },
+    { concurrency: 40 }
+  );
+
+  let filteredMessages: gmail_v1.Schema$Message[] = [];
+  messages.forEach((message) => message && filteredMessages.push(message));
+
+  return filteredMessages;
 }
 
 // Fetches a message from our API given a message ID

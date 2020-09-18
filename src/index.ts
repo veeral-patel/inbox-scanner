@@ -2,7 +2,7 @@ import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
 import { getUrlsFromMessages } from './lib/extract_urls';
 import { getFileUrls } from './lib/file_link';
-import { getAllMessageIds } from './lib/message';
+import { getMessages } from './lib/message';
 import { authorize } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_link';
 import { getUniqueUrls } from './lib/unique_urls';
@@ -13,9 +13,9 @@ fs.readFile('credentials.json', (err, content) => {
 });
 
 async function main(gmail: gmail_v1.Gmail) {
-  const allMessageIds = await getAllMessageIds(gmail);
+  const allMessages = await getMessages(gmail);
 
-  const allUrls = await getUrlsFromMessages(gmail, allMessageIds);
+  const allUrls = await getUrlsFromMessages(gmail, allMessages);
 
   console.log('all URLs:');
   console.log(allUrls);
