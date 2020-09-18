@@ -20,10 +20,9 @@ export async function isPublicGoogleDriveFileLink(theUrl: string) {
   return false;
 }
 
-// to do: switch to async/await
 // Gets all the public URLs from a list of URLs
 export async function getPublicUrls(urls: string[]): Promise<string[]> {
-  return Bluebird.map(urls, (theUrl) => {
+  const results = await Bluebird.map(urls, (theUrl) => {
     if (
       isPublicDropboxFileLink(theUrl) ||
       isPublicGoogleDriveFileLink(theUrl)
@@ -31,11 +30,11 @@ export async function getPublicUrls(urls: string[]): Promise<string[]> {
       return theUrl;
     }
     return null;
-  }).then((results) => {
-    let publicUrls: string[] = [];
-    results.forEach((result) => {
-      if (result) publicUrls.push(result);
-    });
-    return publicUrls;
   });
+
+  let publicUrls: string[] = [];
+  results.forEach((result) => {
+    if (result) publicUrls.push(result);
+  });
+  return publicUrls;
 }
