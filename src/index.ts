@@ -15,6 +15,8 @@ fs.readFile('credentials.json', (err, content) => {
 async function main(gmail: gmail_v1.Gmail) {
   const allMessages = await getMessages(gmail);
 
+  console.log(`Got ${allMessages.length} message(s)`);
+
   const allUrls = await getUrlsFromMessages(gmail, allMessages);
 
   console.log('all URLs:');
