@@ -1,5 +1,5 @@
 // Gets the URLs that look like they're of cloud based file links
-export function getFileLinks(urls: string[]): string[] {
+export function getFileUrls(urls: string[]): string[] {
   return urls.filter(
     (theUrl) => isGoogleDriveFileLink(theUrl) || isDropboxFileLink(theUrl)
   );

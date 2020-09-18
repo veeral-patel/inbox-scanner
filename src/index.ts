@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
 import { getUrlsFromMessages } from './lib/extract_urls';
-import { getFileLinks } from './lib/file_link';
+import { getFileUrls } from './lib/file_link';
 import { getAllMessageIds } from './lib/message';
 import { authorize } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_link';
@@ -20,7 +20,7 @@ async function main(gmail: gmail_v1.Gmail) {
   console.log('all URLs:');
   console.log(allUrls);
 
-  const fileUrls = getFileLinks(allUrls);
+  const fileUrls = getFileUrls(allUrls);
 
   console.log('file URLs:');
   console.log(fileUrls);
@@ -81,3 +81,6 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: look at my files in lib/. are the dependencies only one way, based on the layers above?
 // that's what I want.
+
+// to do: my lib/ module should only export these 5 functions
+// getMessages, getAllUrls, getFileUrls, getPublicUrls, getUniqueUrls
