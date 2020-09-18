@@ -2,6 +2,7 @@ import Bluebird from 'bluebird';
 import getUrls from 'get-urls';
 import { gmail_v1 } from 'googleapis';
 
+// [Testable]
 export async function getUrlsFromMessages(
   gmail: gmail_v1.Gmail,
   messages: gmail_v1.Schema$Message[]

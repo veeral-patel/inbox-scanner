@@ -40,7 +40,11 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // ERROR HANDLING - TO DO
 
-// to do: handle errors properly (not with console.log)
+// to do: handle errors properly (not with console.log).
+// do this by handling all operational errors using the steps from the HN comment, eliminating
+// programmer errors, wrapping operational errors. see the joyent article
+// (https://www.joyent.com/node-js/production/design/errors) and verror (https://github.com/joyent/node-verror)
+
 // I should have error handling every time I call a promise, whether with .catch
 // or with try/catch in the case of async/await
 
@@ -57,7 +61,8 @@ async function main(gmail: gmail_v1.Gmail) {
 // in oauth.ts
 // in public_file_url.ts
 // in unique_urls.ts
-// first: annotate my functions in lib/ based on their testability (in progress)
+
+// first: annotate my functions in lib/ based on their testability - DONE
 
 // also check against my real email account to see how long it takes
 
