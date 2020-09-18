@@ -56,10 +56,16 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // CODE IMPROVEMENT - TO DO
 
-// look through my code in lib/ and improve it. see: https://github.com/goldbergyoni/nodebestpractices
+// look through my code in lib/ and improve it.
 
 // also: each function should be written at the right abstraction layer. don't violate
 // abstraction barriers
+
+// PRESENTATION - TO DO
+
+// - Create README file.
+// - Maybe - document how my code is organized. In a CONTRIBUTING.md file?
+// - Maybe - post my project on Reddit and HN
 
 // ONCE THE ABOVE IS DONE --
 
@@ -67,9 +73,14 @@ async function main(gmail: gmail_v1.Gmail) {
 
 // to do: create a gmail account and test my program against it
 
-// MAYBE ---
+// MAYBE --
+
+// improve my code based on this repo: https://github.com/goldbergyoni/nodebestpractices
+
+// NOT NOW ---
 
 // maybe: get travis CI working for this repo
+// Include Travis CI badge in README
 
 // LATER ---
 
