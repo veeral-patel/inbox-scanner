@@ -9,3 +9,4 @@ package-lock.json
 credentials.json
 token.json
 dependencygraph.svg
+.metals
