@@ -80,7 +80,11 @@ async function getMessage(
       id: messageId,
     })
     .catch((err: Error) => {
-      throw err;
+      const wrappedError = new VError(
+        err,
+        `Failed to get the message with ID ${messageId}`
+      );
+      throw wrappedError;
     });
 
   return response.data;
@@ -96,6 +100,7 @@ export async function getMessages(
       err,
       "Failed to get our email messages' IDs"
     );
+
     throw wrappedError;
   });
 
