@@ -1,4 +1,3 @@
-import Bluebird from 'bluebird';
 import { gmail_v1 } from 'googleapis';
 import { notEmpty } from './util';
 
@@ -14,7 +13,7 @@ async function getMessageIds(
       userId: 'me',
       pageToken,
       includeSpamTrash: true,
-      q: 'interview', // to do: comment this out
+      q: 'the', // to do: comment this out
     })
     .catch((err: Error) => {
       throw err;
@@ -90,22 +89,35 @@ export async function getMessages(
   gmail: gmail_v1.Gmail
 ): Promise<gmail_v1.Schema$Message[]> {
   // [Error case] Promise fails
-  const allMessageIds = await getAllMessageIds(gmail)
-    .catch((err: Error) => {
-      throw err;
-    })
-    .catch((err: Error) => {
-      throw err;
-    });
-
-  // [Error case] Promise fails
-  const messages = await Bluebird.map(
-    allMessageIds,
-    async (messageId) => await getMessage(gmail, messageId),
-    { concurrency: 40 } // Limit our in-flight requests to avoid rate limit errors
-  ).catch((err: Error) => {
+  const allMessageIds = await getAllMessageIds(gmail).catch((err: Error) => {
     throw err;
   });
+
+  // TODO: add rate limiting back
+
+  // [Error case] Promise fails
+  const allResults = await Promise.allSettled(
+    allMessageIds.map(async (messageId) => await getMessage(gmail, messageId))
+  );
+  // .catch((err: Error) => {
+  // TODO: should I add back this catch block?
+  // TODO: if I keep this catch block, wrap this error message
+  //   throw err;
+  // });
+
+  let messages = allResults
+    .filter((c) => c.status === 'fulfilled')
+    .map((c) => <PromiseFulfilledResult<gmail_v1.Schema$Message>>c)
+    .map((c) => c.value);
+
+  // TODO: log each of our failed results (or do this in the getMessage method)
+
+  let failedResults = allResults
+    .filter((c) => c.status === 'rejected')
+    .map((c) => <PromiseRejectedResult>c);
+
+  console.log(`Failed results: ${failedResults.length}`);
+  // failedResults.forEach((result) => console.log(result.reason));
 
   return messages.filter(notEmpty);
 }
