@@ -18,7 +18,11 @@ async function getMessageIds(
       q: 'interview', // to do: comment this out
     })
     .catch((err: Error) => {
-      throw err;
+      const wrappedError = new VError(
+        err,
+        `Failed to get batch of message IDs using page token ${pageToken}`
+      );
+      throw wrappedError;
     });
 
   // Extract the message ID from each message object we receive and store our
@@ -55,6 +59,7 @@ async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
       string[],
       string | undefined
     ] = await getMessageIds(gmail, nextPageToken).catch((err: Error) => {
+      // We intentionally don't wrap the error here as doing so wouldn't add any information
       throw err;
     });
 
