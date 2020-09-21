@@ -1,5 +1,6 @@
 import Bluebird from 'bluebird';
 import { gmail_v1 } from 'googleapis';
+import VError from 'verror';
 import { notEmpty } from './util';
 
 // Returns a promise that resolves to (1) the message IDs from the page with the associated page token
@@ -90,10 +91,13 @@ export async function getMessages(
   gmail: gmail_v1.Gmail
 ): Promise<gmail_v1.Schema$Message[]> {
   // [Error case] Promise fails
-  const allMessageIds = await getAllMessageIds(gmail)
-    .catch((err: Error) => {
-      throw err;
-    })
+  const allMessageIds = await getAllMessageIds(gmail).catch((err: Error) => {
+    const wrappedError = new VError(
+      err,
+      "Failed to get our email messages' IDs"
+    );
+    throw wrappedError;
+  });
 
   // [Error case] Promise fails
   const messages = await Bluebird.map(
