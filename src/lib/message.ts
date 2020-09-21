@@ -94,9 +94,6 @@ export async function getMessages(
     .catch((err: Error) => {
       throw err;
     })
-    .catch((err: Error) => {
-      throw err;
-    });
 
   // [Error case] Promise fails
   const messages = await Bluebird.map(
