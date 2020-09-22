@@ -1,7 +1,5 @@
 import axios from 'axios';
-import Bluebird from 'bluebird';
 import { isDropboxFileUrl, isGoogleDriveFileUrl } from './file_url';
-import { notEmpty } from './util';
 
 // [Testable]
 async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
@@ -36,13 +34,31 @@ export async function getPublicUrls(urls: string[]): Promise<string[]> {
   // [Error case] Promise fails
 
   // TODO: use Promise.allSettled
-  const publicUrls = await Bluebird.map(urls, (theUrl) => {
-    if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl))
-      return theUrl;
-    return null;
-  }).catch((err: Error) => {
-    throw err;
+  // TODO: add a catch clause
+
+  const allResults = await Promise.allSettled(
+    urls.map((theUrl) => {
+      if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl))
+        return theUrl;
+      return null;
+    })
+  );
+
+  // Separate our promises based on whether they were fulfilled...
+  const publicUrls = allResults
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => (result as PromiseFulfilledResult<string>).value);
+
+  // Or failed
+  const failedResults = allResults.filter(
+    (result) => result.status === 'rejected'
+  );
+
+  // console.error each of our failed results
+  failedResults.forEach((result) => {
+    const theError = (result as PromiseRejectedResult).reason;
+    console.error((theError as Error).message);
   });
 
-  return publicUrls.filter(notEmpty);
+  return publicUrls;
 }
