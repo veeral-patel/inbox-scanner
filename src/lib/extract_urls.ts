@@ -115,6 +115,7 @@ async function getText(
               messageId,
               part.body.attachmentId
             ).catch((err: Error) => {
+              // TODO: log the error and don't re-throw it
               throw err;
             });
 
@@ -142,6 +143,7 @@ async function getText(
           // [Error case] Promise fails
           const additionalText = await getText(gmail, messageId, part).catch(
             (err: Error) => {
+              // TODO: log the error instead and don't re-throw it
               throw err;
             }
           );
