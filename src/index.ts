@@ -1,7 +1,6 @@
 import express from 'express';
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
-import open from 'open';
 import VError from 'verror';
 import { getUrlsFromMessages } from './lib/extract_urls';
 import { getFileUrls } from './lib/file_url';
@@ -19,8 +18,12 @@ app.get('/', (_req, res) => {
   fs.readFile('credentials.json', (err, content) => {
     // And if we get an error, respond with a 500
     if (err) {
-      const wrappedError = new VError(err, 'Failed to load client secret file');
-      throw wrappedError;
+      const wrappedError = new VError(
+        err,
+        "Failed to load client secret file. Please create a credentials.json file if one doesn't exist"
+      );
+      console.error(wrappedError.message);
+      res.sendStatus(500);
     } else {
       // Otherwise, generate a URL for the user to authenticate at and redirect to that URL
       const authUrl = getAuthUrl(JSON.parse(content.toString()));
@@ -41,10 +44,7 @@ app.listen(PORT, () => {
   const urlOfServer = `http://localhost:${PORT}`;
 
   // Also print the URL of our server
-  console.log(`Visit ${urlOfServer} to get started.`);
-
-  // And open the URL of our server in the browser
-  open(urlOfServer);
+  console.log(`Visit ${urlOfServer} to get started.\n`);
 });
 
 async function scanEmails(gmail: gmail_v1.Gmail) {
