@@ -1,7 +1,6 @@
-import Bluebird from 'bluebird';
+import { GaxiosError } from 'gaxios';
 import { gmail_v1 } from 'googleapis';
 import VError from 'verror';
-import { notEmpty } from './util';
 
 // Returns a promise that resolves to (1) the message IDs from the page with the associated page token
 // and (2) the page token to use when retrieving our next set of message IDs. [Not testing]
@@ -17,10 +16,9 @@ async function getMessageIds(
       includeSpamTrash: true,
       q: 'interview', // to do: comment this out
     })
-    .catch((err: Error) => {
+    .catch((err: GaxiosError) => {
       const wrappedError = new VError(
-        err,
-        `Failed to get batch of message IDs using page token ${pageToken}`
+        `Failed to get batch of message IDs using page token ${pageToken}: ${err.message}`
       );
       throw wrappedError;
     });
@@ -84,10 +82,9 @@ async function getMessage(
       userId: 'me',
       id: messageId,
     })
-    .catch((err: Error) => {
+    .catch((err: GaxiosError) => {
       const wrappedError = new VError(
-        err,
-        `Failed to get the message with ID ${messageId}`
+        `Failed to get the message with ID ${messageId}: ${err.message}`
       );
       throw wrappedError;
     });
@@ -111,14 +108,31 @@ export async function getMessages(
 
   // [Error case] Promise fails
 
-  // TODO: use Promise.allSettled
-  const messages = await Bluebird.map(
-    allMessageIds,
-    async (messageId) => await getMessage(gmail, messageId),
-    { concurrency: 40 } // Limit our in-flight requests to avoid rate limit errors
-  ).catch((err: Error) => {
-    throw err;
+  // TODO: add rate limiting back
+  // TODO: add a catch clause
+
+  const allResults = await Promise.allSettled(
+    allMessageIds.map(async (messageId) => await getMessage(gmail, messageId))
+  );
+
+  // Separate our promises based on whether they were fulfilled...
+  const messages = allResults
+    .filter((result) => result.status === 'fulfilled')
+    .map(
+      (result) =>
+        (result as PromiseFulfilledResult<gmail_v1.Schema$Message>).value
+    );
+
+  // Or failed
+  const failedResults = allResults.filter(
+    (result) => result.status === 'rejected'
+  );
+
+  // console.error each of our failed promises
+  failedResults.forEach((result) => {
+    const theError = (result as PromiseRejectedResult).reason;
+    console.error((theError as Error).message);
   });
 
-  return messages.filter(notEmpty);
+  return messages;
 }
