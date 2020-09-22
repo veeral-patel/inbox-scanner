@@ -142,9 +142,8 @@ async function getText(
 
           // [Error case] Promise fails
           const additionalText = await getText(gmail, messageId, part).catch(
-            (err: Error) => {
-              // TODO: log the error instead and don't re-throw it
-              throw err;
+            (_err) => {
+              // Normally, I'd log to an error tracking tool if a recursive call like this failed.
             }
           );
           text += additionalText;
