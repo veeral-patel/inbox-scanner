@@ -1,6 +1,7 @@
 import Bluebird from 'bluebird';
 import getUrls from 'get-urls';
 import { gmail_v1 } from 'googleapis';
+import VError from 'verror';
 import { flatten } from './util';
 
 // [Testable]
@@ -31,7 +32,12 @@ async function getUrlsFromMessage(
   // [Error case] Promise fails
   const text = await getText(gmail, message.id, message.payload).catch(
     (err: Error) => {
-      throw err;
+      const wrappedError = new VError(
+        err,
+        `Failed to extract the text from the message with ID ${message.id}`
+      );
+
+      throw wrappedError;
     }
   );
 
@@ -54,7 +60,12 @@ async function getAttachment(
       id: attachmentId,
     })
     .catch((err: Error) => {
-      throw err;
+      const wrappedError = new VError(
+        err,
+        `Failed to fetch the attachment with ID ${attachmentId} from the message with ID ${messageId}`
+      );
+
+      throw wrappedError;
     });
 
   return response.data;
