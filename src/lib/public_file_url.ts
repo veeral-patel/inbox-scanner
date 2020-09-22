@@ -6,12 +6,16 @@ import { isDropboxFileUrl, isGoogleDriveFileUrl } from './file_url';
 async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
   if (isDropboxFileUrl(theUrl)) {
     // [Error case] Promise fails
-    const response = await axios.get(theUrl);
+    const response = await axios.get(theUrl).catch((_err) => {
+      // note that we don't check if the response's an error, intentionally
+      // an error means we got a 4xx or 5xx which just tells us our URL is not public
+    });
 
     // note that we don't check if the response's an error, intentionally
     // an error means we got a 4xx or 5xx which just tells us our URL is not public
 
-    return response.status === 301;
+    if (response) return response.status === 301;
+    return false;
   }
   return false;
 }
@@ -20,12 +24,13 @@ async function isPublicDropboxFileUrl(theUrl: string): Promise<boolean> {
 async function isPublicGoogleDriveFileUrl(theUrl: string) {
   if (isGoogleDriveFileUrl(theUrl)) {
     // [Error case] Promise fails
-    const response = await axios.get(theUrl);
+    const response = await axios.get(theUrl).catch((_err) => {
+      // note that we don't check if the response's an error, intentionally
+      // an error means we got a 4xx or 5xx which just tells us our URL is not public
+    });
 
-    // note that we don't check if the response's an error, intentionally
-    // an error means we got a 4xx or 5xx which just tells us our URL is not public
-
-    return response.status === 200;
+    if (response) return response.status === 200;
+    return false;
   }
   return false;
 }
