@@ -29,10 +29,18 @@ export function authorize(
     scope: SCOPES,
   });
 
-  console.info(
-    'Please grant access to your email account by authenticating at this URL.\n\nWe will open it for you automatically as well.\n'
+  console.log('INBOX SCANNER\n');
+
+  console.log(
+    'We scan your email inbox for public Google Drive and Dropbox file links.\n'
   );
-  console.info(authUrl);
+
+  console.log('Start by logging in at the URL below:\n');
+
+  console.log(authUrl);
+
+  console.log('\n');
+
   open(authUrl);
 }
 
