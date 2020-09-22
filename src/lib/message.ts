@@ -111,6 +111,7 @@ export async function getMessages(
   // TODO: add rate limiting back
   // TODO: add a catch clause
 
+  // Request all the messages
   const allResults = await Promise.allSettled(
     allMessageIds.map(async (messageId) => await getMessage(gmail, messageId))
   );
@@ -128,7 +129,7 @@ export async function getMessages(
     (result) => result.status === 'rejected'
   );
 
-  // console.error each of our failed promises
+  // console.error each of our failed results
   failedResults.forEach((result) => {
     const theError = (result as PromiseRejectedResult).reason;
     console.error((theError as Error).message);
