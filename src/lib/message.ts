@@ -110,6 +110,8 @@ export async function getMessages(
   });
 
   // [Error case] Promise fails
+
+  // TODO: use Promise.allSettled
   const messages = await Bluebird.map(
     allMessageIds,
     async (messageId) => await getMessage(gmail, messageId),

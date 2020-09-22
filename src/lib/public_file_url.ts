@@ -35,7 +35,7 @@ async function isPublicGoogleDriveFileUrl(theUrl: string) {
 export async function getPublicUrls(urls: string[]): Promise<string[]> {
   // [Error case] Promise fails
 
-  // TODO: move to Promise.allSettled
+  // TODO: use Promise.allSettled
   const publicUrls = await Bluebird.map(urls, (theUrl) => {
     if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl))
       return theUrl;

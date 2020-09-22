@@ -9,6 +9,8 @@ export async function getUrlsFromMessages(
   messages: gmail_v1.Schema$Message[]
 ): Promise<string[]> {
   // [Error case] Promise fails
+
+  // TODO: use Promise.allSettled
   const listOflistsOfUrls: string[][] = await Bluebird.map(
     messages,
     async (message) => getUrlsFromMessage(gmail, message)
@@ -87,6 +89,8 @@ async function getText(
   let piecesOfText: string[] = [];
   if (payload.parts)
     // [Error case] Promise fails
+
+    // TODO: use Promise.allSettled
     piecesOfText = await Bluebird.map(payload.parts, async (part) => {
       let text: string = '';
 
