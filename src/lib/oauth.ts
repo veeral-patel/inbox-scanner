@@ -1,6 +1,5 @@
 import { GaxiosError } from 'gaxios';
 import { gmail_v1, google } from 'googleapis';
-import open from 'open';
 
 // The code is in this file is from Gmail's Node.js SDK quickstart.
 
@@ -12,10 +11,7 @@ const TOKEN_PATH = 'token.json';
 
 // Create an OAuth2 client with the given credentials, and then execute the
 // given callback function [Not testing]
-export function authorize(
-  credentials: any,
-  _callback: (gmail: gmail_v1.Gmail) => void
-) {
+export function getAuthUrl(credentials: any) {
   const { client_secret, client_id, redirect_uris } = credentials.web;
 
   const oAuth2Client = new google.auth.OAuth2(
@@ -29,19 +25,7 @@ export function authorize(
     scope: SCOPES,
   });
 
-  console.log('INBOX SCANNER\n');
-
-  console.log(
-    'We scan your email inbox for public Google Drive and Dropbox file links.\n'
-  );
-
-  console.log('Start by logging in at the URL below:\n');
-
-  console.log(authUrl);
-
-  console.log('\n');
-
-  open(authUrl);
+  return authUrl;
 }
 
 function oAuthCodeReceived(

@@ -1,19 +1,45 @@
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
+import http from 'http';
+import open from 'open';
 import VError from 'verror';
 import { getUrlsFromMessages } from './lib/extract_urls';
 import { getFileUrls } from './lib/file_url';
 import { getMessages } from './lib/message';
-import { authorize } from './lib/oauth';
+import { getAuthUrl } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_url';
 import { getUniqueUrls } from './lib/unique_urls';
 
-fs.readFile('credentials.json', (err, content) => {
-  if (err) return console.log('Error loading client secret file:', err);
-  authorize(JSON.parse(content.toString()), main);
-});
+const PORT = 7777;
 
-async function main(gmail: gmail_v1.Gmail) {
+http
+  .createServer((_request, response) => {
+    fs.readFile('credentials.json', (err, content) => {
+      // TODO: show an error to the user if we get an error here
+      if (err) return console.log('Error loading client secret file:', err);
+
+      const authUrl = getAuthUrl(JSON.parse(content.toString()));
+      response.writeHead(302, {
+        Location: authUrl,
+      });
+      response.end();
+    });
+  })
+  .listen(PORT);
+
+console.log('INBOX SCANNER\n');
+
+console.log(
+  'We scan your email inbox for public Google Drive and Dropbox file links.\n'
+);
+
+const urlOfServer = `http://localhost:${PORT}`;
+
+console.log(`Visit ${urlOfServer} to get started.`);
+
+open(urlOfServer);
+
+async function scanEmails(gmail: gmail_v1.Gmail) {
   // [Error case] Promise fails
   const allMessages = await getMessages(gmail).catch((err: Error) => {
     const wrappedError = new VError(
