@@ -33,7 +33,6 @@ async function isPublicGoogleDriveFileUrl(theUrl: string) {
 export async function getPublicUrls(urls: string[]): Promise<string[]> {
   // [Error case] Promise fails
 
-  // TODO: use Promise.allSettled
   // TODO: add a catch clause
 
   const allResults = await Promise.allSettled(
