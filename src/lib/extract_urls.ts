@@ -127,11 +127,13 @@ async function getText(
                 messageId,
                 part.body.attachmentId
               ).catch((err: Error) => {
-                // TODO: log the error and don't re-throw it
-                throw err;
+                // If we fail to get an attachment, skip the attachment and log to console
+                console.error(
+                  `Failed to scan attachment ${part.body?.attachmentId} in message ${messageId}: ${err.message}`
+                );
               });
 
-              if (attachment?.data) {
+              if (attachment && attachment?.data) {
                 text += base64Decode(attachment?.data);
               }
             }
