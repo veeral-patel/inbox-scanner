@@ -1,5 +1,5 @@
 import urlModule from 'url';
-import { withoutDuplicates } from './util';
+import { withoutDuplicates } from './array';
 
 // [Testable]
 export function getUniqueUrls(urls: string[]) {
