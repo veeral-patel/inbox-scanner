@@ -1,6 +1,6 @@
+import express from 'express';
 import fs from 'fs';
 import { gmail_v1 } from 'googleapis';
-import http from 'http';
 import open from 'open';
 import VError from 'verror';
 import { getUrlsFromMessages } from './lib/extract_urls';
@@ -12,32 +12,40 @@ import { getUniqueUrls } from './lib/unique_urls';
 
 const PORT = 7777;
 
-http
-  .createServer((_request, response) => {
-    fs.readFile('credentials.json', (err, content) => {
-      // TODO: show an error to the user if we get an error here
-      if (err) return console.log('Error loading client secret file:', err);
+const app = express();
 
+app.get('/', (_req, res) => {
+  // Read our OAuth app credentials...
+  fs.readFile('credentials.json', (err, content) => {
+    // And if we get an error, respond with a 500
+    if (err) {
+      const wrappedError = new VError(err, 'Failed to load client secret file');
+      throw wrappedError;
+    } else {
+      // Otherwise, generate a URL for the user to authenticate at and redirect to that URL
       const authUrl = getAuthUrl(JSON.parse(content.toString()));
-      response.writeHead(302, {
-        Location: authUrl,
-      });
-      response.end();
-    });
-  })
-  .listen(PORT);
+      res.redirect(authUrl);
+    }
+  });
+});
 
-console.log('INBOX SCANNER\n');
+// Start our server
+app.listen(PORT, () => {
+  // Once started, print out a welcome message
+  console.log('INBOX SCANNER\n');
 
-console.log(
-  'We scan your email inbox for public Google Drive and Dropbox file links.\n'
-);
+  console.log(
+    'We scan your email inbox for public Google Drive and Dropbox file links.\n'
+  );
 
-const urlOfServer = `http://localhost:${PORT}`;
+  const urlOfServer = `http://localhost:${PORT}`;
 
-console.log(`Visit ${urlOfServer} to get started.`);
+  // Also print the URL of our server
+  console.log(`Visit ${urlOfServer} to get started.`);
 
-open(urlOfServer);
+  // And open the URL of our server in the browser
+  open(urlOfServer);
+});
 
 async function scanEmails(gmail: gmail_v1.Gmail) {
   // [Error case] Promise fails
