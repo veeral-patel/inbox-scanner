@@ -12,7 +12,11 @@ export function getUniqueUrls(urls: string[]) {
 
 // Removes the query parameters from a URL by parsing it and re-assembling it. [Testable]
 export function stripQueryParameters(theUrl: string): string {
-  // [Error case] What if we fail to parse theUrl (b/c it's not valid)?
-  const parsedUrl = urlModule.parse(theUrl);
-  return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+  // [Error case] If we fail to parse the URL, then just return the URL itself
+  try {
+    const parsedUrl = urlModule.parse(theUrl);
+    return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+  } catch {
+    return theUrl;
+  }
 }
