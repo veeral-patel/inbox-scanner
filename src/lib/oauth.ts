@@ -29,6 +29,10 @@ export function authorize(
     scope: SCOPES,
   });
 
+  console.info(
+    'Please grant access to your email account by authenticating at this URL.\n\nWe will open it for you automatically as well.\n'
+  );
+  console.info(authUrl);
   open(authUrl);
 }
 
