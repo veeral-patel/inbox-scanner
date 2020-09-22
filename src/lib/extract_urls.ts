@@ -157,10 +157,12 @@ async function getText(
             // [Error case] Promise fails
             const additionalText = await getText(gmail, messageId, part).catch(
               (_err) => {
-                // TODO: log this error. Don't re-throw
+                console.error(
+                  `Failed to extract text from part ${part.partId} of message ${messageId}`
+                );
               }
             );
-            text += additionalText;
+            if (additionalText) text += additionalText;
           }
         }
         return text;
