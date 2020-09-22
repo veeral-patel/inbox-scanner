@@ -1,4 +1,3 @@
-import Bluebird from 'bluebird';
 import getUrls from 'get-urls';
 import { gmail_v1 } from 'googleapis';
 import VError from 'verror';
@@ -111,61 +110,82 @@ async function getText(
   }
 
   let piecesOfText: string[] = [];
-  if (payload.parts)
+  if (payload.parts) {
     // [Error case] Promise fails
 
     // TODO: use Promise.allSettled
-    piecesOfText = await Bluebird.map(payload.parts, async (part) => {
-      let text: string = '';
+    const allResults = await Promise.allSettled(
+      payload.parts.map(async (part) => {
+        let text: string = '';
 
-      if (part.filename) {
-        // if this part represents an attachment, get the text from the attachment too!
-        if (part.body?.attachmentId) {
-          if (part.mimeType === 'text/plain') {
-            // [Error case] Promise fails
-            const attachment = await getAttachment(
-              gmail,
-              messageId,
-              part.body.attachmentId
-            ).catch((err: Error) => {
-              // TODO: log the error and don't re-throw it
-              throw err;
-            });
+        if (part.filename) {
+          // if this part represents an attachment, get the text from the attachment too!
+          if (part.body?.attachmentId) {
+            if (part.mimeType === 'text/plain') {
+              // [Error case] Promise fails
+              const attachment = await getAttachment(
+                gmail,
+                messageId,
+                part.body.attachmentId
+              ).catch((err: Error) => {
+                // TODO: log the error and don't re-throw it
+                throw err;
+              });
 
-            if (attachment?.data) {
-              text += base64Decode(attachment?.data);
+              if (attachment?.data) {
+                text += base64Decode(attachment?.data);
+              }
+            }
+          } else if (part.body?.data) {
+            // base64 decode the attachment data from the part and then get text
+            if (part.mimeType === 'text/plain') {
+              if (part.body?.data) {
+                text += base64Decode(part.body?.data);
+              }
             }
           }
-        } else if (part.body?.data) {
-          // base64 decode the attachment data from the part and then get text
-          if (part.mimeType === 'text/plain') {
+        } else {
+          if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
             if (part.body?.data) {
               text += base64Decode(part.body?.data);
             }
-          }
-        }
-      } else {
-        if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-          if (part.body?.data) {
-            text += base64Decode(part.body?.data);
-          }
-        } else {
-          // it's either a container part so we get the text from its subparts
-          // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
+          } else {
+            // it's either a container part so we get the text from its subparts
+            // or it's a part we don't care about, which doesn't have sub-parts, so getText(...) will output an empty string
 
-          // [Error case] Promise fails
-          const additionalText = await getText(gmail, messageId, part).catch(
-            (_err) => {
-              // Normally, I'd log to an error tracking tool if a recursive call like this failed.
-            }
-          );
-          text += additionalText;
+            // [Error case] Promise fails
+            const additionalText = await getText(gmail, messageId, part).catch(
+              (_err) => {
+                // TODO: log this error. Don't re-throw
+              }
+            );
+            text += additionalText;
+          }
         }
-      }
-      return text;
+        return text;
+      })
+    );
+
+    // Separate our promises based on whether they were fulfilled...
+    piecesOfText = allResults
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => (result as PromiseFulfilledResult<string>).value);
+
+    // Remember to include our original text in piecesOfText array!
+    piecesOfText.push(initialText);
+
+    // Or failed
+    const failedResults = allResults.filter(
+      (result) => result.status === 'rejected'
+    );
+
+    // console.error each of our failed results
+    failedResults.forEach((result) => {
+      const theError = (result as PromiseRejectedResult).reason;
+      console.error((theError as Error).message);
     });
+  }
 
-  piecesOfText.push(initialText);
   return piecesOfText.join('\n');
 }
 
