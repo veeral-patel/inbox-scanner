@@ -109,12 +109,15 @@ export async function getMessages(
   // [Error case] Promise fails
 
   // TODO: add rate limiting back
-  // TODO: add a catch clause
 
   // Request all the messages
   const allResults = await Promise.allSettled(
     allMessageIds.map(async (messageId) => await getMessage(gmail, messageId))
-  );
+  ).catch((err) => {
+    // allSettled shouldn't error, but catch any errors just in case :)
+    const wrappedError = new VError(err, 'Failed to get email messages');
+    throw wrappedError;
+  });
 
   // Separate our promises based on whether they were fulfilled...
   const messages = allResults

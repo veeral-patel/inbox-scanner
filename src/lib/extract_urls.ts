@@ -11,6 +11,7 @@ export async function getUrlsFromMessages(
   // [Error case] Promise fails
 
   // Request all the messages
+  // TODO: add a catch clause
   const allResults = await Promise.allSettled(
     messages.map(async (message) => getUrlsFromMessage(gmail, message))
   );
@@ -113,6 +114,7 @@ async function getText(
   if (payload.parts) {
     // [Error case] Promise fails
 
+    // TODO: add a catch clause
     const allResults = await Promise.allSettled(
       payload.parts.map(async (part) => {
         let text: string = '';

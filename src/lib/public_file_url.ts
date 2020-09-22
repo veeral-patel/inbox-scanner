@@ -1,4 +1,5 @@
 import axios from 'axios';
+import VError from 'verror';
 import { isDropboxFileUrl, isGoogleDriveFileUrl } from './file_url';
 
 // [Testable]
@@ -33,15 +34,20 @@ async function isPublicGoogleDriveFileUrl(theUrl: string) {
 export async function getPublicUrls(urls: string[]): Promise<string[]> {
   // [Error case] Promise fails
 
-  // TODO: add a catch clause
-
   const allResults = await Promise.allSettled(
     urls.map((theUrl) => {
       if (isPublicDropboxFileUrl(theUrl) || isPublicGoogleDriveFileUrl(theUrl))
         return theUrl;
       return null;
     })
-  );
+  ).catch((err) => {
+    // allSettled shouldn't error, but catch any errors just in case :)
+    const wrappedError = new VError(
+      err,
+      'Failed to determine which file links were public'
+    );
+    throw wrappedError;
+  });
 
   // Separate our promises based on whether they were fulfilled...
   const publicUrls = allResults
