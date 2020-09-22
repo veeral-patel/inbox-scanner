@@ -34,7 +34,7 @@ async function getUrlsFromMessage(
     (err: Error) => {
       const wrappedError = new VError(
         err,
-        `Failed to extract the text from the message with ID ${message.id}`
+        `Failed to extract the text from message ${message.id}`
       );
 
       throw wrappedError;
@@ -62,7 +62,7 @@ async function getAttachment(
     .catch((err: Error) => {
       const wrappedError = new VError(
         err,
-        `Failed to fetch the attachment with ID ${attachmentId} from the message with ID ${messageId}`
+        `Failed to fetch attachment ${attachmentId} from message ${messageId}`
       );
 
       throw wrappedError;
