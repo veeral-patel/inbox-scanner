@@ -113,7 +113,6 @@ async function getText(
   if (payload.parts) {
     // [Error case] Promise fails
 
-    // TODO: use Promise.allSettled
     const allResults = await Promise.allSettled(
       payload.parts.map(async (part) => {
         let text: string = '';
