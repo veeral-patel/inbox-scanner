@@ -161,15 +161,16 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
   );
 
   // Print out some basic stats
-  console.log(
-    `Scanned ${allResults.length} email messages. Successfully scanned ${allResults.length} messages. Failed to scan ${failedResults.length} messages.`
-  );
+  console.log('\n---');
+  console.log(`Email messages scanned: ${allResults.length}`);
+  console.log(`Scanned successfully: ${listOfListsOfPublicFileUrls.length}`);
+  console.log(`Scanned unsuccessfully: ${failedResults.length}`);
 
   const publicFileUrls = flatten(listOfListsOfPublicFileUrls);
   const uniquePublicFileUrls = getUniqueUrls(publicFileUrls);
 
   console.log(
-    `\nFound ${uniquePublicFileUrls.length} public Google Drive and Dropbox URLs in total:`
+    `\nFound ${uniquePublicFileUrls.length} public Google Drive and Dropbox URLs in total:\n`
   );
 
   // Print out all the public file URLs we found
