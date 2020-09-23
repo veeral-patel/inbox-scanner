@@ -2,7 +2,7 @@
 
 Scans a Gmail inbox for public Dropbox and Google Drive file links.
 
-### To run the scanner:
+### To run the scanner
 
 #### Clone repository and install dependencies
 
@@ -35,7 +35,7 @@ yarn start
 ### Run all (unit) tests with:
 
 ```
+yarn build
 yarn test
 ```
 
-Note that you must run `yarn build` first
