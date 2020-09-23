@@ -14,13 +14,13 @@ export function isGoogleDriveFileUrl(theUrl: string): boolean {
     'sheets.google.com',
     'forms.google.com',
     'slides.google.com',
-  ].some((host) => theUrl.includes(host));
+  ].some((host) => theUrl.includes(host) && theUrl !== host);
 }
 
 // Outputs whether an URL is a Dropbox file url by simply checking
 // if the URL contains one of a few substrings. [Testable]
 export function isDropboxFileUrl(theUrl: string): boolean {
-  return ['dropbox.com/s/', 'dropbox.com/scl/'].some((host) =>
-    theUrl.includes(host)
+  return ['dropbox.com/s/', 'dropbox.com/scl/'].some(
+    (host) => theUrl.includes(host) && theUrl !== host
   );
 }
