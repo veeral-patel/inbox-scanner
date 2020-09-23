@@ -64,10 +64,10 @@ export async function getPublicUrls(urls: string[]): Promise<string[]> {
     (result) => result.status === 'rejected'
   );
 
-  // console.error each of our failed results
+  // console.log each of our failed results
   failedResults.forEach((result) => {
     const theError = (result as PromiseRejectedResult).reason;
-    console.error((theError as Error).message);
+    console.log((theError as Error).message);
   });
 
   return publicUrls;

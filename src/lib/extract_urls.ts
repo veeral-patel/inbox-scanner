@@ -96,7 +96,7 @@ async function getText(
                 part.body.attachmentId
               ).catch((err: Error) => {
                 // If we fail to get an attachment, skip the attachment and log to console
-                console.error(
+                console.log(
                   `Failed to scan attachment ${part.body?.attachmentId} in message ${messageId}: ${err.message}`
                 );
               });
@@ -125,7 +125,7 @@ async function getText(
             // [Error case] Promise fails
             const additionalText = await getText(gmail, messageId, part).catch(
               (_err) => {
-                console.error(
+                console.log(
                   `Failed to extract text from part ${part.partId} of message ${messageId}`
                 );
               }
@@ -157,10 +157,10 @@ async function getText(
       (result) => result.status === 'rejected'
     );
 
-    // console.error each of our failed results
+    // console.log each of our failed results
     failedResults.forEach((result) => {
       const theError = (result as PromiseRejectedResult).reason;
-      console.error((theError as Error).message);
+      console.log((theError as Error).message);
     });
   }
 

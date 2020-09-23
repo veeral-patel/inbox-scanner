@@ -28,7 +28,7 @@ app.get('/', (_req, res) => {
       );
       res.sendStatus(500);
 
-      console.error(wrappedError.message);
+      console.log(wrappedError.message);
       process.exit();
     } else {
       // Otherwise, generate a URL for the user to authenticate at and redirect to that URL
@@ -57,7 +57,7 @@ app.get('/callback', (req, res) => {
       );
       res.sendStatus(500);
 
-      console.error(wrappedError.message);
+      console.log(wrappedError.message);
       process.exit();
     } else {
       const oAuth2Client = getOAuthClient(JSON.parse(content.toString()));
@@ -117,33 +117,49 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
   const allResults = await Promise.allSettled(
     allMessageIds.map(
       async (messageId): Promise<string[]> => {
-        const message = await getMessage(gmail, messageId).catch((err: Error) =>
-          console.error(err.message)
+        const message = await getMessage(gmail, messageId).catch(
+          (err: Error) => {
+            console.log(err.message);
+            return Promise.reject(err);
+          }
         );
 
-        // If getMessage failed, then don't run the rest of the code in this function
+        // If we didn't get a message, return immediately as we can't continue
+        // process this message
         if (!message) return [];
 
-        const allUrls = await getUrlsFromMessage(
-          gmail,
-          message
-        ).catch((err: Error) => console.error(err.message));
-
-        if (!allUrls) return [];
+        const allUrls = await getUrlsFromMessage(gmail, message).catch(
+          (err: Error) => {
+            console.log(err.message);
+            return Promise.reject(err);
+          }
+        );
 
         const fileUrls = getFileUrls(allUrls);
 
-        if (!fileUrls) return [];
-
-        const publicFileUrls = await getPublicUrls(
-          fileUrls
-        ).catch((err: Error) => console.error(err.message));
-
-        if (!publicFileUrls) return [];
+        const publicFileUrls = await getPublicUrls(fileUrls).catch(
+          (err: Error) => {
+            console.log(err.message);
+            return Promise.reject(err);
+          }
+        );
 
         console.log(
           `Found ${publicFileUrls.length} public file URLs in message ${messageId}.`
         );
+
+        if (publicFileUrls.length > 0) {
+          // Print out a newline
+          console.log();
+
+          // Print out the public file URLs from the message
+          publicFileUrls.forEach((theUrl) => {
+            console.log(theUrl);
+          });
+
+          // Print out another newline
+          console.log();
+        }
 
         return publicFileUrls;
       }
