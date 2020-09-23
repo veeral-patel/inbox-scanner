@@ -115,7 +115,7 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
   console.log(`Found ${allMessageIds.length} messages to scan.\n`);
 
   // [Error case] Promise fails
-  // Request all the messages
+  // Request all the messages, with only 40 requests in flight at a time to work around rate limits
   const {
     results: nestedListOfPublicFileUrls,
     errors,
