@@ -8,6 +8,7 @@ import { getFileUrls } from './lib/file_url';
 import { getAllMessageIds, getMessage } from './lib/message';
 import { getAuthUrl, getOAuthClient } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_url';
+import { flatten } from './lib/util';
 
 const PORT = 7777;
 
@@ -96,6 +97,8 @@ app.listen(PORT, () => {
 });
 
 async function scanEmails(gmail: gmail_v1.Gmail) {
+  console.log('Computing how many messages we need to scan...');
+
   // [Error case] Promise fails
   const allMessageIds = await getAllMessageIds(gmail).catch((err: Error) => {
     const wrappedError = new VError(
@@ -110,33 +113,60 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
 
   // [Error case] Promise fails
   // Request all the messages
-  allMessageIds.map(async (messageId) => {
-    const message = await getMessage(gmail, messageId).catch((err: Error) =>
-      console.error(err.message)
-    );
+  const allResults = await Promise.allSettled(
+    allMessageIds.map(
+      async (messageId): Promise<string[]> => {
+        const message = await getMessage(gmail, messageId).catch((err: Error) =>
+          console.error(err.message)
+        );
 
-    // If getMessage failed, then don't run the rest of the code in this function
-    if (!message) return;
+        // If getMessage failed, then don't run the rest of the code in this function
+        if (!message) return [];
 
-    const allUrls = await getUrlsFromMessage(
-      gmail,
-      message
-    ).catch((err: Error) => console.error(err.message));
+        const allUrls = await getUrlsFromMessage(
+          gmail,
+          message
+        ).catch((err: Error) => console.error(err.message));
 
-    if (!allUrls) return;
+        if (!allUrls) return [];
 
-    const fileUrls = getFileUrls(allUrls);
+        const fileUrls = getFileUrls(allUrls);
 
-    if (!fileUrls) return;
+        if (!fileUrls) return [];
 
-    const publicFileUrls = await getPublicUrls(fileUrls).catch((err: Error) =>
-      console.error(err.message)
-    );
+        const publicFileUrls = await getPublicUrls(
+          fileUrls
+        ).catch((err: Error) => console.error(err.message));
 
-    if (!publicFileUrls) return;
+        if (!publicFileUrls) return [];
 
-    console.log(
-      `Found ${publicFileUrls.length} public file URLs in message ${messageId}.`
-    );
-  });
+        console.log(
+          `Found ${publicFileUrls.length} public file URLs in message ${messageId}.`
+        );
+
+        return publicFileUrls;
+      }
+    )
+  );
+
+  // Separate our promises based on whether they were fulfilled...
+  const listOfListsOfPublicFileUrls = allResults
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => (result as PromiseFulfilledResult<string[]>).value);
+
+  // Or failed
+  const failedResults = allResults.filter(
+    (result) => result.status === 'rejected'
+  );
+
+  // Print out some basic stats
+  console.log(
+    `Scanned ${allResults.length} email messages. Successfully scanned ${allResults.length} messages. Failed to scan ${failedResults.length} messages.`
+  );
+
+  const publicFileUrls = flatten(listOfListsOfPublicFileUrls);
+  console.log(`\nFound ${publicFileUrls.length} in total:`);
+
+  // Print out all the public file URLs we found
+  publicFileUrls.forEach((theUrl) => console.log(theUrl));
 }

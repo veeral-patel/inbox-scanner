@@ -14,7 +14,6 @@ async function getMessageIds(
       userId: 'me',
       pageToken,
       includeSpamTrash: true,
-      q: 'patrick', // to do: comment this out
     })
     .catch((err: GaxiosError) => {
       const wrappedError = new VError(
