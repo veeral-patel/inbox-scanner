@@ -14,7 +14,7 @@ async function getMessageIds(
       userId: 'me',
       pageToken,
       includeSpamTrash: true,
-      q: 'interview', // to do: comment this out
+      q: 'patrick', // to do: comment this out
     })
     .catch((err: GaxiosError) => {
       const wrappedError = new VError(
@@ -107,8 +107,6 @@ export async function getMessages(
   });
 
   // [Error case] Promise fails
-
-  // TODO: add rate limiting back
 
   // Request all the messages
   const allResults = await Promise.allSettled(

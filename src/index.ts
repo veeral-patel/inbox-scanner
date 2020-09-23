@@ -45,7 +45,6 @@ app.get('/callback', (req, res) => {
     return;
   }
 
-  // TODO: don't duplicate all this code
   // Read our OAuth app credentials (again)...
   fs.readFile('credentials.json', (err, content) => {
     // And if we get an error reading this file, respond with a 500, log the error to
