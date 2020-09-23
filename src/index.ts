@@ -169,8 +169,13 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
           }
         }
 
+        let snippet = "couldn't get snippet";
+        if (message.snippet) {
+          snippet = message.snippet.substring(0, 60);
+        }
+
         console.log(
-          `Found ${publicFileUrls.length} public file URLs in message ${messageId} (${humanReadableSize}, created ${humanReadableDate}).`
+          `Found ${publicFileUrls.length} public file URLs in message ${messageId} (${humanReadableSize}, created ${humanReadableDate}). Snippet: ${snippet}`
         );
 
         if (publicFileUrls.length > 0) {
