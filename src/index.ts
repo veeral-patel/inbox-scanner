@@ -3,6 +3,7 @@ import express from 'express';
 import fs from 'fs';
 import { GaxiosError } from 'gaxios';
 import { gmail_v1, google } from 'googleapis';
+import prettyBytes from 'pretty-bytes';
 import VError from 'verror';
 import { getUrlsFromMessage } from './lib/extract_urls';
 import { getFileUrls } from './lib/file_url';
@@ -151,8 +152,13 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
           }
         );
 
+        let humanReadableSize = 'N/A';
+        if (message?.sizeEstimate) {
+          humanReadableSize = prettyBytes(message?.sizeEstimate);
+        }
+
         console.log(
-          `Found ${publicFileUrls.length} public file URLs in message ${messageId}.`
+          `Found ${publicFileUrls.length} public file URLs in message ${messageId} (${humanReadableSize}).`
         );
 
         if (publicFileUrls.length > 0) {

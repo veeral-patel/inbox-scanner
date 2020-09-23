@@ -39,6 +39,7 @@
     "gaxios": "^3.2.0",
     "get-urls": "^10.0.0",
     "googleapis": "^59.0.0",
+    "pretty-bytes": "^5.4.1",
     "verror": "^1.10.0"
   },
   "devDependencies": {
