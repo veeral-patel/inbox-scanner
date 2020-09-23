@@ -152,13 +152,25 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
           }
         );
 
-        let humanReadableSize = 'N/A';
+        // Convert the message's date to a easy-to-read format
+        let humanReadableSize = 'unknown size';
         if (message?.sizeEstimate) {
           humanReadableSize = prettyBytes(message?.sizeEstimate);
         }
 
+        let humanReadableDate = 'unknown date';
+        if (message?.internalDate) {
+          try {
+            const msSinceEpoch = parseInt(message.internalDate);
+            humanReadableDate = new Date(msSinceEpoch).toLocaleDateString();
+          } catch {
+            // likely caused by an error in parsing internalDate to integer. intentionally do nothing.
+            // keep humanReadableDate set to 'unknown date'.
+          }
+        }
+
         console.log(
-          `Found ${publicFileUrls.length} public file URLs in message ${messageId} (${humanReadableSize}).`
+          `Found ${publicFileUrls.length} public file URLs in message ${messageId} (${humanReadableSize}, created ${humanReadableDate}).`
         );
 
         if (publicFileUrls.length > 0) {
