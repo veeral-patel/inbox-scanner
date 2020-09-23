@@ -21,9 +21,7 @@ export async function getUrlsFromMessage(
     }
   );
 
-  const foundUrls: string[] = Array.from(getUrls(text));
-
-  return foundUrls;
+  return Array.from(getUrls(text));
 }
 
 // [Not testing]
