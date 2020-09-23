@@ -3,12 +3,11 @@ import fs from 'fs';
 import { GaxiosError } from 'gaxios';
 import { gmail_v1, google } from 'googleapis';
 import VError from 'verror';
-import { getUrlsFromMessages } from './lib/extract_urls';
+import { getUrlsFromMessage } from './lib/extract_urls';
 import { getFileUrls } from './lib/file_url';
-import { getMessages } from './lib/message';
+import { getAllMessageIds, getMessage } from './lib/message';
 import { getAuthUrl, getOAuthClient } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_url';
-import { getUniqueUrls } from './lib/unique_urls';
 
 const PORT = 7777;
 
@@ -98,52 +97,46 @@ app.listen(PORT, () => {
 
 async function scanEmails(gmail: gmail_v1.Gmail) {
   // [Error case] Promise fails
-  const allMessages = await getMessages(gmail).catch((err: Error) => {
+  const allMessageIds = await getAllMessageIds(gmail).catch((err: Error) => {
     const wrappedError = new VError(
       err,
-      'Failed to retrieve your email messages'
+      "Failed to get our email messages' IDs"
     );
-    console.error(wrappedError.message);
-    process.exit();
+
+    throw wrappedError;
   });
 
-  console.log(`Got ${allMessages.length} message(s)`);
+  console.log(`Found ${allMessageIds.length} messages to scan.\n`);
 
   // [Error case] Promise fails
-  const allUrls = await getUrlsFromMessages(gmail, allMessages).catch(
-    (err: Error) => {
-      const wrappedError = new VError(
-        err,
-        'Failed to extract URLs from your email messages'
-      );
-      console.error(wrappedError.message);
-      process.exit();
-    }
-  );
-
-  console.log('all URLs:');
-  console.log(allUrls);
-
-  const fileUrls = getFileUrls(allUrls);
-
-  console.log('file URLs:');
-  console.log(fileUrls);
-
-  // [Error case] Promise fails
-  const publicUrls = await getPublicUrls(fileUrls).catch((err: Error) => {
-    const wrappedError = new VError(
-      err,
-      'Failed to identify which of the file links in your email inbox are public'
+  // Request all the messages
+  allMessageIds.map(async (messageId) => {
+    const message = await getMessage(gmail, messageId).catch((err: Error) =>
+      console.error(err.message)
     );
-    console.error(wrappedError.message);
-    process.exit();
+
+    // If getMessage failed, then don't run the rest of the code in this function
+    if (!message) return;
+
+    const allUrls = await getUrlsFromMessage(
+      gmail,
+      message
+    ).catch((err: Error) => console.error(err.message));
+
+    if (!allUrls) return;
+
+    const fileUrls = getFileUrls(allUrls);
+
+    if (!fileUrls) return;
+
+    const publicFileUrls = await getPublicUrls(fileUrls).catch((err: Error) =>
+      console.error(err.message)
+    );
+
+    if (!publicFileUrls) return;
+
+    console.log(
+      `Found ${publicFileUrls.length} public file URLs in message ${messageId}.`
+    );
   });
-
-  console.log('public URLs:');
-  console.log(publicUrls);
-
-  const uniquePublicUrls = getUniqueUrls(publicUrls);
-
-  console.log('unique public URLs:');
-  console.log(uniquePublicUrls);
 }

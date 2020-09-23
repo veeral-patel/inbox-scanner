@@ -1,45 +1,9 @@
 import getUrls from 'get-urls';
 import { gmail_v1 } from 'googleapis';
 import VError from 'verror';
-import { flatten } from './util';
 
 // [Testable]
-export async function getUrlsFromMessages(
-  gmail: gmail_v1.Gmail,
-  messages: gmail_v1.Schema$Message[]
-): Promise<string[]> {
-  // [Error case] Promise fails
-
-  // Request all the messages
-  const allResults = await Promise.allSettled(
-    messages.map(async (message) => getUrlsFromMessage(gmail, message))
-  ).catch((err) => {
-    // this should never happen but handle it just in case :)
-    const wrappedError = new VError(err, `Failed to get URLs from messages`);
-    throw wrappedError;
-  });
-
-  // Separate our promises based on whether they were fulfilled...
-  const listOflistsOfUrls = allResults
-    .filter((result) => result.status === 'fulfilled')
-    .map((result) => (result as PromiseFulfilledResult<string[]>).value);
-
-  // Or failed
-  const failedResults = allResults.filter(
-    (result) => result.status === 'rejected'
-  );
-
-  // console.error each of our failed results
-  failedResults.forEach((result) => {
-    const theError = (result as PromiseRejectedResult).reason;
-    console.error((theError as Error).message);
-  });
-
-  return flatten(listOflistsOfUrls);
-}
-
-// [Testable]
-async function getUrlsFromMessage(
+export async function getUrlsFromMessage(
   gmail: gmail_v1.Gmail,
   message: gmail_v1.Schema$Message
 ) {

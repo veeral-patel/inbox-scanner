@@ -41,7 +41,9 @@ async function getMessageIds(
 
 // (Gmail forces us to make separate calls to retrieve the emails associated with each
 // message ID.)
-async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
+export async function getAllMessageIds(
+  gmail: gmail_v1.Gmail
+): Promise<string[]> {
   let nextPageToken: string | undefined = undefined;
   let firstExecution = true;
 
@@ -72,7 +74,7 @@ async function getAllMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
 }
 
 // Fetches a message from our API given a message ID. [Not testing]
-async function getMessage(
+export async function getMessage(
   gmail: gmail_v1.Gmail,
   messageId: string
 ): Promise<gmail_v1.Schema$Message | null> {
@@ -90,51 +92,4 @@ async function getMessage(
     });
 
   return response.data;
-}
-
-// Get a list of all the message in an email inbox. [Not testing]
-export async function getMessages(
-  gmail: gmail_v1.Gmail
-): Promise<gmail_v1.Schema$Message[]> {
-  // [Error case] Promise fails
-  const allMessageIds = await getAllMessageIds(gmail).catch((err: Error) => {
-    const wrappedError = new VError(
-      err,
-      "Failed to get our email messages' IDs"
-    );
-
-    throw wrappedError;
-  });
-
-  // [Error case] Promise fails
-
-  // Request all the messages
-  const allResults = await Promise.allSettled(
-    allMessageIds.map(async (messageId) => await getMessage(gmail, messageId))
-  ).catch((err) => {
-    // allSettled shouldn't error, but catch any errors just in case :)
-    const wrappedError = new VError(err, 'Failed to get email messages');
-    throw wrappedError;
-  });
-
-  // Separate our promises based on whether they were fulfilled...
-  const messages = allResults
-    .filter((result) => result.status === 'fulfilled')
-    .map(
-      (result) =>
-        (result as PromiseFulfilledResult<gmail_v1.Schema$Message>).value
-    );
-
-  // Or failed
-  const failedResults = allResults.filter(
-    (result) => result.status === 'rejected'
-  );
-
-  // console.error each of our failed results
-  failedResults.forEach((result) => {
-    const theError = (result as PromiseRejectedResult).reason;
-    console.error((theError as Error).message);
-  });
-
-  return messages;
 }
