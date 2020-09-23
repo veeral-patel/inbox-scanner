@@ -8,6 +8,7 @@ import { getFileUrls } from './lib/file_url';
 import { getAllMessageIds, getMessage } from './lib/message';
 import { getAuthUrl, getOAuthClient } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_url';
+import { getUniqueUrls } from './lib/unique_urls';
 import { flatten } from './lib/util';
 
 const PORT = 7777;
@@ -165,8 +166,12 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
   );
 
   const publicFileUrls = flatten(listOfListsOfPublicFileUrls);
-  console.log(`\nFound ${publicFileUrls.length} in total:`);
+  const uniquePublicFileUrls = getUniqueUrls(publicFileUrls);
+
+  console.log(
+    `\nFound ${uniquePublicFileUrls.length} public Google Drive and Dropbox URLs in total:`
+  );
 
   // Print out all the public file URLs we found
-  publicFileUrls.forEach((theUrl) => console.log(theUrl));
+  uniquePublicFileUrls.forEach((theUrl) => console.log(theUrl));
 }
