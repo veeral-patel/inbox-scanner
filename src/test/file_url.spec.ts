@@ -2,6 +2,8 @@ import test from 'ava';
 import { isDropboxFileUrl, isGoogleDriveFileUrl } from '../lib/file_url';
 
 test('Can check if URLs are Google Drive urls', (t) => {
+  t.is(isGoogleDriveFileUrl('https://yahoo.com'), false);
+  t.is(isGoogleDriveFileUrl('https://docs.google.com'), false);
   t.is(
     isGoogleDriveFileUrl(
       'https://docs.google.com/spreadsheets/d/1pV7xvIOA1X6c0syeXww5_fLhKvhRcwx6y6RX_IU_RPk/edit'
