@@ -1,3 +1,4 @@
+import PromisePool from '@supercharge/promise-pool';
 import express from 'express';
 import fs from 'fs';
 import { GaxiosError } from 'gaxios';
@@ -8,8 +9,6 @@ import { getFileUrls } from './lib/file_url';
 import { getAllMessageIds, getMessage } from './lib/message';
 import { getAuthUrl, getOAuthClient } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_url';
-import { getUniqueUrls } from './lib/unique_urls';
-import { flatten } from './lib/util';
 
 const PORT = 7777;
 
@@ -114,8 +113,9 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
 
   // [Error case] Promise fails
   // Request all the messages
-  const allResults = await Promise.allSettled(
-    allMessageIds.map(
+  const { results, errors } = await PromisePool.withConcurrency(40)
+    .for(allMessageIds)
+    .process(
       async (messageId): Promise<string[]> => {
         const message = await getMessage(gmail, messageId).catch(
           (err: Error) => {
@@ -163,32 +163,13 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
 
         return publicFileUrls;
       }
-    )
-  );
+    );
 
-  // Separate our promises based on whether they were fulfilled...
-  const listOfListsOfPublicFileUrls = allResults
-    .filter((result) => result.status === 'fulfilled')
-    .map((result) => (result as PromiseFulfilledResult<string[]>).value);
+  // TODO: print out all results at the end
+  console.log(results);
 
-  // Or failed
-  const failedResults = allResults.filter(
-    (result) => result.status === 'rejected'
-  );
+  // No need to print out errors again
+  console.log(errors);
 
-  // Print out some basic stats
-  console.log('\n---');
-  console.log(`Email messages scanned: ${allResults.length}`);
-  console.log(`Scanned successfully: ${listOfListsOfPublicFileUrls.length}`);
-  console.log(`Scanned unsuccessfully: ${failedResults.length}`);
-
-  const publicFileUrls = flatten(listOfListsOfPublicFileUrls);
-  const uniquePublicFileUrls = getUniqueUrls(publicFileUrls);
-
-  console.log(
-    `\nFound ${uniquePublicFileUrls.length} public Google Drive and Dropbox URLs in total:\n`
-  );
-
-  // Print out all the public file URLs we found
-  uniquePublicFileUrls.forEach((theUrl) => console.log(theUrl));
+  // TODO: print out basic stats
 }
