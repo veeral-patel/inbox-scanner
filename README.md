@@ -5,7 +5,7 @@ Scans a Gmail inbox for public Dropbox and Google Drive file links.
 To run the scanner:
 
 ```
-git clone http://github.com/veeral-patel/inbox-scanner
+git clone http://github.com/veeral-patel/inbox-scanner && cd inbox-scanner
 yarn install
 yarn build
 yarn start
