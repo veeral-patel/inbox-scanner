@@ -140,8 +140,10 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
           }
         );
 
+        // Filter down to file URLs
         const fileUrls = getFileUrls(allUrls);
 
+        // Filter down to public file URLs
         const publicFileUrls = await getPublicUrls(fileUrls).catch(
           (err: Error) => {
             console.log(err.message);
