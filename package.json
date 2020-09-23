@@ -31,17 +31,14 @@
   "dependencies": {
     "@bitauth/libauth": "^1.17.1",
     "@supercharge/promise-pool": "^1.5.0",
-    "@types/bluebird": "^3.5.32",
     "@types/express": "^4.17.8",
     "@types/verror": "^1.10.4",
     "axios": "^0.19.0",
-    "bluebird": "^3.7.2",
     "express": "^4.17.1",
     "frontail": "^4.9.1",
     "gaxios": "^3.2.0",
     "get-urls": "^10.0.0",
     "googleapis": "^59.0.0",
-    "open": "^7.2.1",
     "verror": "^1.10.0"
   },
   "devDependencies": {
