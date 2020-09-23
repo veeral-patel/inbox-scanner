@@ -13,7 +13,11 @@ import { getPublicUrls } from './lib/public_file_url';
 import { getUniqueUrls } from './lib/unique_urls';
 import { flatten } from './lib/util';
 
-const PORT = 7777;
+const AUTH_PORT = 7777;
+const CONSOLE_PORT = 9001;
+
+const AUTH_URL = `http://localhost:${AUTH_PORT}`;
+const CONSOLE_URL = `http://localhost:${CONSOLE_PORT}`;
 
 const app = express();
 
@@ -74,7 +78,7 @@ app.get('/callback', (req, res) => {
 
             const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
 
-            res.send('Scanning your emails now. Please visit your console.');
+            res.send(`Scanning your emails now. Please visit ${CONSOLE_URL}.`);
 
             scanEmails(gmail);
           }
@@ -84,8 +88,8 @@ app.get('/callback', (req, res) => {
   });
 });
 
-// Start our server
-app.listen(PORT, () => {
+// Start our (auth) server
+app.listen(AUTH_PORT, () => {
   // Once started, print out a welcome message
   console.log('INBOX SCANNER\n');
 
@@ -93,10 +97,8 @@ app.listen(PORT, () => {
     'We scan your email inbox for public Google Drive and Dropbox file links.\n'
   );
 
-  const urlOfServer = `http://localhost:${PORT}`;
-
   // Also print the URL of our server
-  console.log(`Visit ${urlOfServer} to get started.\n`);
+  console.log(`Visit ${AUTH_URL} to get started.\n`);
 });
 
 async function scanEmails(gmail: gmail_v1.Gmail) {
