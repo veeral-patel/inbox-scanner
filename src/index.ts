@@ -9,6 +9,8 @@ import { getFileUrls } from './lib/file_url';
 import { getAllMessageIds, getMessage } from './lib/message';
 import { getAuthUrl, getOAuthClient } from './lib/oauth';
 import { getPublicUrls } from './lib/public_file_url';
+import { getUniqueUrls } from './lib/unique_urls';
+import { flatten } from './lib/util';
 
 const PORT = 7777;
 
@@ -113,7 +115,10 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
 
   // [Error case] Promise fails
   // Request all the messages
-  const { results, errors } = await PromisePool.withConcurrency(40)
+  const {
+    results: nestedListOfPublicFileUrls,
+    errors,
+  } = await PromisePool.withConcurrency(40)
     .for(allMessageIds)
     .process(
       async (messageId): Promise<string[]> => {
@@ -165,11 +170,25 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
       }
     );
 
-  // TODO: print out all results at the end
-  console.log(results);
+  // Compute some basic stats
+  const successfullyScanned = nestedListOfPublicFileUrls.length;
+  const unsuccessfullyScanned = errors.length;
+  const totalScanned = allMessageIds.length;
 
-  // No need to print out errors again
-  console.log(errors);
+  // And print out our basic stats
+  console.log('\n---');
+  console.log(`Email messages scanned: ${totalScanned}`);
+  console.log(`Scanned successfully: ${successfullyScanned}`);
+  console.log(`Scanned unsuccessfully: ${unsuccessfullyScanned}`);
 
-  // TODO: print out basic stats
+  // Remove duplicates
+  const publicFileUrls = flatten(nestedListOfPublicFileUrls);
+  const uniquePublicFileUrls = getUniqueUrls(publicFileUrls);
+
+  console.log(
+    `\nFound ${uniquePublicFileUrls.length} public Google Drive and Dropbox URLs in total:\n`
+  );
+
+  // Print out all the public file URLs we found
+  uniquePublicFileUrls.forEach((theUrl) => console.log(theUrl));
 }
