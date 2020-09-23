@@ -1,6 +1,5 @@
 import PromisePool from '@supercharge/promise-pool';
 import express from 'express';
-import fs from 'fs';
 import { GaxiosError } from 'gaxios';
 import { gmail_v1, google } from 'googleapis';
 import prettyBytes from 'pretty-bytes';
@@ -22,70 +21,59 @@ const CONSOLE_URL = `http://localhost:${CONSOLE_PORT}`;
 const app = express();
 
 // Redirects you to a URL where you can log in and grant access via OAuth
-app.get('/', (_req, res) => {
-  // Read our OAuth app credentials...
-  fs.readFile('credentials.json', (err, content) => {
-    // And if we get an error reading this file, respond with a 500, log the error to
-    // console, and shut down the server (as this error is un-recoverable.)
-    if (err) {
-      const wrappedError = new VError(
-        err,
-        "Failed to load client secret file. Please create a credentials.json file if one doesn't exist"
-      );
-      res.sendStatus(500);
+app.get('/', async (_req, res) => {
+  // Otherwise, generate a URL for the user to authenticate at and redirect to that URL
+  const authUrl = await getAuthUrl().catch((err) => {
+    const wrappedError = new VError(
+      err,
+      'Failed to generate authentication URL'
+    );
 
-      console.log(wrappedError.message);
-      process.exit();
-    } else {
-      // Otherwise, generate a URL for the user to authenticate at and redirect to that URL
-      const authUrl = getAuthUrl(JSON.parse(content.toString()));
-      res.redirect(authUrl);
-    }
+    res.send(wrappedError.message);
   });
+
+  if (authUrl) res.redirect(authUrl);
 });
 
 // After you grant access successfully, Google redirects your browser to this callback URL.
-app.get('/callback', (req, res) => {
+app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) {
     res.send('Failed to get code from the callback URL');
     return;
   }
 
-  // Read our OAuth app credentials (again)...
-  fs.readFile('credentials.json', (err, content) => {
-    // And if we get an error reading this file, respond with a 500, log the error to
-    // console, and shut down the server (as this error is un-recoverable.)
-    if (err) {
-      const wrappedError = new VError(
-        err,
-        "Failed to load client secret file. Please create a credentials.json file if one doesn't exist"
-      );
-      res.sendStatus(500);
+  const oAuth2Client = await getOAuthClient().catch((err: Error) => {
+    const wrappedError = new VError(err, 'Failed to create an OAuth client');
 
-      console.log(wrappedError.message);
-      process.exit();
-    } else {
-      const oAuth2Client = getOAuthClient(JSON.parse(content.toString()));
-      oAuth2Client.getToken(
-        code as string,
-        (err: GaxiosError | null, token?: any) => {
-          if (err) {
-            res.send(`Error retrieving access token: ${err.message}`);
-            return;
-          } else {
-            oAuth2Client.setCredentials(token);
-
-            const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
-
-            res.send(`Scanning your emails now. Please visit ${CONSOLE_URL}.`);
-
-            scanEmails(gmail);
-          }
-        }
-      );
-    }
+    res.send(wrappedError.message);
   });
+
+  // Use the code to retrieve an OAuth token from Google
+  if (oAuth2Client)
+    oAuth2Client.getToken(
+      code as string,
+      (err: GaxiosError | null, token?: any) => {
+        if (err) {
+          const wrappedError = new VError(
+            err,
+            'Failed to retrieve access token from callback URL'
+          );
+
+          res.send(wrappedError.message);
+
+          process.exit();
+        } else {
+          oAuth2Client.setCredentials(token);
+
+          const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+
+          res.send(`Scanning your emails now. Please visit ${CONSOLE_URL}.`);
+
+          scanEmails(gmail);
+        }
+      }
+    );
 });
 
 // Start our (auth) server
