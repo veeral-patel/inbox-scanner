@@ -135,12 +135,14 @@ async function scanEmails(gmail: gmail_v1.Gmail) {
         const fileUrls = getFileUrls(allUrls);
 
         // Filter down to public file URLs
-        const publicFileUrls = await getPublicUrls(fileUrls).catch(
+        let publicFileUrls = await getPublicUrls(fileUrls).catch(
           (err: Error) => {
             console.log(err.message);
             return Promise.reject(err);
           }
         );
+
+        publicFileUrls = getUniqueUrls(publicFileUrls);
 
         // Convert the message's date to a easy-to-read format
         let humanReadableSize = 'unknown size';
