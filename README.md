@@ -1,6 +1,8 @@
 # Inbox Scanner
 
-Scans a Gmail inbox for public Dropbox and Google Drive file links.
+Scans a Gmail inbox for public Dropbox and Google Drive file links. Written using Node.js and Typescript.
+
+![](screenshot.png)
 
 ### To run the scanner
 
