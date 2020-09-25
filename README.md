@@ -46,3 +46,7 @@ Now, open `http://localhost:9001` and follow the instructions there.
 yarn build
 yarn test
 ```
+
+## Developing
+
+If you want to work on this repository, run `yarn watch:build` to continually build your Typescript code.
