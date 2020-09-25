@@ -26,7 +26,11 @@ Email scanning in particular works like this:
 ### Code structure
 
 - `src/index.ts` - creates Express server for auth, includes main function for scanning emails
+- `src/message.ts` - gets message IDs and retrieves messages, for steps 1 and 2 above
 - `src/lib/extract_urls.ts` - exposes `getUrlsFromMessage`, which given a message does steps 3 to 5 above
+- `src/lib/file_url.ts` - exposes `getFileUrls`, which does step 6 above
+- `src/lib/public_file_url.ts` - exposes `getPublicUrls`, which does step 7 above
+- `src/lib/unique_urls.ts` - exposes `getUniqueUrls`, which de-duplicates a list of URLs for step 8 above
 
 #### Dependency graph
 
