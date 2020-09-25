@@ -1,8 +1,6 @@
 # Inbox Scanner
 
-[![GitHub issues](https://img.shields.io/github/issues/veeral-patel/inbox-scanner.svg)](https://gitHub.com/veeral-patel/inbox-scanner/issues/)
-
-[![GitHub issues-closed](https://img.shields.io/github/issues-closed/veeral-patel/inbox-scanner.svg)](https://gitHub.com/veeral-patel/inbox-scanner/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub issues](https://img.shields.io/github/issues/veeral-patel/inbox-scanner.svg)](https://gitHub.com/veeral-patel/inbox-scanner/issues/) [![GitHub issues-closed](https://img.shields.io/github/issues-closed/veeral-patel/inbox-scanner.svg)](https://gitHub.com/veeral-patel/inbox-scanner/issues?q=is%3Aissue+is%3Aclosed)
 
 Scans a Gmail inbox for public Dropbox and Google Drive file links. Written using Node.js and Typescript.
 
