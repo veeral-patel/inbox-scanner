@@ -4,6 +4,8 @@
 
 Scans a Gmail inbox for public Dropbox and Google Drive file links. Written using Node.js and Typescript.
 
+I've documented how the program works in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ![](screenshot.png)
 
 ## To run the scanner
