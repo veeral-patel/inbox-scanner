@@ -1,6 +1,8 @@
 # Contributing
 
-At a high level, the program works like this:
+## Overview
+
+At a high level, my program works like this:
 
 1. It launches a server at localhost:7777 that redirects you to a login page
 2. Once you log in, the program receives an OAuth token it uses to start scanning your emails
@@ -19,7 +21,7 @@ Email scanning in particular works like this:
 5. Use the [`get-urls`](https://github.com/sindresorhus/get-urls) to get all the URLs from the text
 6. Narrow down the URLs to those that look like Google Drive or Dropbox file URLs
 7. Make a request to all these URLs to determine which file URLs are public (based upon status code)
-8. De-duplicate and return the resulting list of URLs
+8. Combine our URLs from all messages, de-duplicate, and return the resulting list
 
 ### Dependency graph
 
